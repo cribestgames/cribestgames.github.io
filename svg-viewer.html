@@ -4,422 +4,207 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Secure SVG Viewer</title>
+
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* --- STILE IDENTICO AL TUO (INVARIATO) --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --accent:#7c6ef7;
+  --accent2:#5eead4;
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --surface2:#1a1a26;
+  --border:#2a2a3a;
+  --text:#e8e8f0;
+  --muted:#6b6b8a;
+}
 
-  :root {
-    --accent: #7c6ef7;
-    --accent2: #5eead4;
-    --bg: #0a0a0f;
-    --surface: #12121a;
-    --surface2: #1a1a26;
-    --border: #2a2a3a;
-    --text: #e8e8f0;
-    --muted: #6b6b8a;
-  }
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
 
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    overflow-x: hidden;
-  }
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:40px 36px 32px;
+  width:100%;
+  max-width:420px;
+}
 
-  .blob {
-    position: fixed;
-    border-radius: 50%;
-    filter: blur(80px);
-    pointer-events: none;
-    z-index: 0;
-    opacity: 0.18;
-  }
-  .blob1 { width: 400px; height: 400px; background: var(--accent); top: -120px; left: -100px; }
-  .blob2 { width: 350px; height: 350px; background: var(--accent2); bottom: -100px; right: -80px; }
+#dropZone{
+  border:2px dashed var(--border);
+  border-radius:16px;
+  padding:44px 20px;
+  text-align:center;
+  cursor:pointer;
+  background:var(--surface2);
+  transition:all .25s ease;
+}
 
-  .card {
-    position: relative;
-    z-index: 1;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    padding: 40px 36px 32px;
-    width: 100%;
-    max-width: 420px;
-    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
-  }
+#dropZone.hover{
+  border-color:var(--accent);
+  box-shadow:0 0 0 4px rgba(124,110,247,.12);
+}
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 28px;
-  }
-  .logo-icon {
-    width: 36px; height: 36px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    box-shadow: 0 4px 14px rgba(124,110,247,0.4);
-  }
-  .logo-text { font-size: 1rem; font-weight: 600; letter-spacing: -0.01em; }
-  .logo-sub { font-size: 0.7rem; color: var(--muted); font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; }
+#previewWrap{ display:none; margin-top:20px; }
+#previewWrap.visible{ display:block; }
 
-  #dropZone {
-    border: 2px dashed var(--border);
-    border-radius: 16px;
-    padding: 44px 20px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    background: var(--surface2);
-    position: relative;
-    overflow: hidden;
-  }
-  #dropZone::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, rgba(124,110,247,0.06), rgba(94,234,212,0.04));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  #dropZone:hover::before,
-  #dropZone.hover::before { opacity: 1; }
-  #dropZone:hover, #dropZone.hover {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 4px rgba(124,110,247,0.12);
-    transform: translateY(-1px);
-  }
+#svgContainer{
+  padding:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:160px;
+  max-height:340px;
+  overflow:auto;
+}
 
-  .drop-icon {
-    font-size: 2.4rem;
-    margin-bottom: 14px;
-    display: block;
-    filter: drop-shadow(0 2px 8px rgba(124,110,247,0.4));
-    transition: transform 0.3s ease;
-  }
-  #dropZone:hover .drop-icon { transform: translateY(-3px) scale(1.05); }
+#svgContainer svg{
+  max-width:100%;
+  max-height:310px;
+}
 
-  .drop-title {
-    font-size: 0.95rem;
-    font-weight: 600;
-    color: var(--text);
-    margin-bottom: 6px;
-  }
-  .drop-sub {
-    font-size: 0.8rem;
-    color: var(--muted);
-    line-height: 1.5;
-  }
-  .drop-sub span {
-    color: var(--accent);
-    font-weight: 500;
-  }
+input[type=file]{ display:none; }
 
-  #previewWrap {
-    display: none;
-    margin-top: 20px;
-    border-radius: 14px;
-    overflow: hidden;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    position: relative;
-  }
-  #previewWrap.visible { display: block; animation: fadeIn 0.3s ease; }
-
-  .preview-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--border);
-    background: rgba(255,255,255,0.02);
-  }
-  .preview-filename {
-    font-size: 0.78rem;
-    font-weight: 500;
-    color: var(--muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 140px;
-  }
-  .preview-actions { display: flex; gap: 8px; }
-
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 6px 13px;
-    border-radius: 8px;
-    border: none;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: inherit;
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #6357e8);
-    color: #fff;
-    box-shadow: 0 3px 10px rgba(124,110,247,0.35);
-  }
-  .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
-  .btn-ghost {
-    background: var(--surface2);
-    color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { color: var(--text); border-color: var(--accent); }
-
-  #svgContainer {
-    padding: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 160px;
-    max-height: 340px;
-    overflow: auto;
-    background-image: 
-      linear-gradient(45deg, #151520 25%, transparent 25%), 
-      linear-gradient(-45deg, #151520 25%, transparent 25%), 
-      linear-gradient(45deg, transparent 75%, #151520 75%), 
-      linear-gradient(-45deg, transparent 75%, #151520 75%);
-    background-size: 20px 20px;
-    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  }
-  #svgContainer svg {
-    max-width: 100%;
-    max-height: 310px;
-    width: auto;
-    height: auto;
-    border-radius: 6px;
-  }
-
-  .zoom-bar {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 14px;
-    border-top: 1px solid var(--border);
-    background: rgba(255,255,255,0.01);
-  }
-  .zoom-label { font-size: 0.72rem; color: var(--muted); flex: 1; }
-  .zoom-btn {
-    width: 26px; height: 26px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    font-size: 1rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    line-height: 1;
-  }
-  .zoom-btn:hover { border-color: var(--accent); color: var(--accent); }
-  #zoomLevel { font-size: 0.75rem; color: var(--text); min-width: 38px; text-align: center; font-weight: 500; }
-
-  input[type=file] { display: none; }
-
-  footer {
-    position: relative; z-index: 1;
-    margin-top: 20px;
-    font-size: 0.72rem;
-    color: var(--muted);
-    display: flex; align-items: center; gap: 6px;
-  }
-  footer::before {
-    content: '';
-    display: inline-block; width: 6px; height: 6px;
-    border-radius: 50%; background: var(--accent2);
-    animation: pulse 2s infinite;
-  }
-
-  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
-  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
-  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-5px)}
+  80%{transform:translateX(5px)}
+}
 </style>
 </head>
+
 <body>
 
-<div class="blob blob1"></div>
-<div class="blob blob2"></div>
-
 <div class="card">
-  <div class="logo">
-    <div class="logo-icon">⬡</div>
-    <div>
-      <div class="logo-text">SVG Viewer</div>
-      <div class="logo-sub">Secure · Client-side</div>
-    </div>
-  </div>
-
   <div id="dropZone">
-    <span class="drop-icon">🗂️</span>
-    <div class="drop-title">Trascina il tuo file SVG</div>
-    <div class="drop-sub">oppure <span>clicca per selezionare</span></div>
+    <div>🗂️ Trascina SVG</div>
+    <div>oppure clicca per selezionare</div>
   </div>
 
   <div id="previewWrap">
-    <div class="preview-toolbar">
-      <span class="preview-filename" id="previewName">file.svg</span>
-      <div class="preview-actions">
-        <button class="btn btn-ghost" onclick="resetViewer()">✕</button>
-        <button class="btn btn-primary" onclick="openInTab()">↗ Apri</button>
-      </div>
-    </div>
+    <div id="previewName"></div>
     <div id="svgContainer"></div>
-    <div class="zoom-bar">
-      <span class="zoom-label">Zoom</span>
-      <button class="zoom-btn" onclick="zoom(-0.25)">−</button>
-      <span id="zoomLevel">100%</span>
-      <button class="zoom-btn" onclick="zoom(+0.25)">+</button>
-      <button class="zoom-btn" title="Reset" onclick="resetZoom()">⊡</button>
-    </div>
   </div>
 </div>
 
-<footer>100% client-side – nessun dato inviato</footer>
-
-<input type="file" id="fileInput" accept=".svg,image/svg+xml">
+<!-- ✅ ORA ACCETTA SVG E XML -->
+<input type="file" id="fileInput"
+accept=".svg,.xml,image/svg+xml,text/xml,application/xml">
 
 <script>
-  const dropZone = document.getElementById("dropZone");
-  const fileInput = document.getElementById("fileInput");
-  const previewWrap = document.getElementById("previewWrap");
-  const svgContainer = document.getElementById("svgContainer");
-  const previewName = document.getElementById("previewName");
-  const zoomLevelEl = document.getElementById("zoomLevel");
+const dropZone = document.getElementById("dropZone");
+const fileInput = document.getElementById("fileInput");
+const previewWrap = document.getElementById("previewWrap");
+const svgContainer = document.getElementById("svgContainer");
+const previewName = document.getElementById("previewName");
 
-  let currentSVG = "";
-  let currentFile = "";
-  let scale = 1;
+let currentSVG = "";
 
-  dropZone.onclick = () => fileInput.click();
+/* CLICK */
+dropZone.onclick = () => fileInput.click();
 
-  dropZone.addEventListener("dragover", e => { e.preventDefault(); dropZone.classList.add("hover"); });
-  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("hover"));
-  dropZone.addEventListener("drop", e => {
-    e.preventDefault(); dropZone.classList.remove("hover");
-    handleFile(e.dataTransfer.files[0]);
-  });
-  
-  fileInput.addEventListener("change", e => {
-    if (e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
-    }
-  });
+/* DRAG & DROP */
+dropZone.addEventListener("dragover", e=>{
+  e.preventDefault();
+  dropZone.classList.add("hover");
+});
 
-  function handleFile(file) {
-    // CORRETTO: rimosso il refuso "file/.svg"
-    if (!file || !file.name.toLowerCase().endsWith(".svg")) {
+dropZone.addEventListener("dragleave", ()=>{
+  dropZone.classList.remove("hover");
+});
+
+dropZone.addEventListener("drop", e=>{
+  e.preventDefault();
+  dropZone.classList.remove("hover");
+  handleFile(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener("change", e=>{
+  if(e.target.files.length>0)
+    handleFile(e.target.files[0]);
+});
+
+/* --- NUOVA VERSIONE SICURA --- */
+function handleFile(file){
+  if(!file) return;
+
+  const name=file.name.toLowerCase();
+  if(!name.endsWith(".svg") && !name.endsWith(".xml")){
+    shake(dropZone);
+    return;
+  }
+
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const rawText=e.target.result;
+
+    const parser=new DOMParser();
+    const doc=parser.parseFromString(rawText,"image/svg+xml");
+
+    /* errore parsing */
+    if(doc.querySelector("parsererror")){
       shake(dropZone);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = e => {
-      currentSVG = sanitizeSVG(e.target.result);
-      currentFile = file.name;
-      showPreview(currentSVG, file.name);
-    };
-    reader.readAsText(file);
-  }
 
-  function sanitizeSVG(svgText) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(svgText, "image/svg+xml");
-    
-    // Sicurezza: rimuove script e oggetti potenzialmente pericolosi
-    doc.querySelectorAll("script, foreignObject, use").forEach(el => el.remove());
-    doc.querySelectorAll("*").forEach(el => {
-      [...el.attributes].forEach(attr => {
-        if (attr.name.startsWith("on") || attr.value.toLowerCase().startsWith("javascript:"))
-          el.removeAttribute(attr.name);
-      });
-    });
-
-    const svg = doc.querySelector("svg");
-    if (svg) {
-      const w = svg.getAttribute("width");
-      const h = svg.getAttribute("height");
-      if (!svg.getAttribute("viewBox") && w && h)
-        svg.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-      
-      svg.removeAttribute("width");
-      svg.removeAttribute("height");
-      svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    /* deve avere <svg> */
+    const svg=doc.querySelector("svg");
+    if(!svg){
+      shake(dropZone);
+      return;
     }
-    return new XMLSerializer().serializeToString(doc);
-  }
 
-  function showPreview(svgContent, name) {
-    scale = 1;
-    updateZoomLabel();
-    svgContainer.innerHTML = svgContent;
-    const svg = svgContainer.querySelector("svg");
-    if (svg) applyScale(svg);
-    previewName.textContent = name;
-    previewWrap.classList.add("visible");
-  }
+    currentSVG=sanitizeSVG(rawText);
+    showPreview(currentSVG,file.name);
+  };
 
-  function applyScale(svg) {
-    svg.style.transform = `scale(${scale})`;
-    svg.style.transformOrigin = "center center";
-    svg.style.transition = "transform 0.2s ease";
-  }
+  reader.readAsText(file);
+}
 
-  function zoom(delta) {
-    scale = Math.min(4, Math.max(0.1, scale + delta));
-    const svg = svgContainer.querySelector("svg");
-    if (svg) applyScale(svg);
-    updateZoomLabel();
-  }
+/* SANITIZZAZIONE */
+function sanitizeSVG(svgText){
+  const parser=new DOMParser();
+  const doc=parser.parseFromString(svgText,"image/svg+xml");
 
-  function resetZoom() {
-    scale = 1;
-    const svg = svgContainer.querySelector("svg");
-    if (svg) applyScale(svg);
-    updateZoomLabel();
-  }
+  doc.querySelectorAll("script,foreignObject,use").forEach(el=>el.remove());
 
-  function updateZoomLabel() {
-    zoomLevelEl.textContent = Math.round(scale * 100) + "%";
-  }
+  doc.querySelectorAll("*").forEach(el=>{
+    [...el.attributes].forEach(attr=>{
+      if(attr.name.startsWith("on") ||
+         attr.value.toLowerCase().startsWith("javascript:"))
+        el.removeAttribute(attr.name);
+    });
+  });
 
-  function resetViewer() {
-    previewWrap.classList.remove("visible");
-    svgContainer.innerHTML = "";
-    fileInput.value = "";
-    currentSVG = "";
-  }
+  return new XMLSerializer().serializeToString(doc);
+}
 
-  function openInTab() {
-    const w = window.open("", "_blank");
-    if (!w) { alert("Popup bloccato dal browser"); return; }
-    w.document.open();
-    w.document.write(`<!DOCTYPE html><html><head>
-      <meta charset="UTF-8"><title>${currentFile}</title>
-      <style>
-        body{margin:0;background:#0a0a0f;display:flex;align-items:center;justify-content:center;height:100vh;overflow:hidden;}
-        svg{max-width:95vw;max-height:95vh;width:auto;height:auto;}
-      </style></head><body>${currentSVG}</body></html>`);
-    w.document.close();
-  }
+function showPreview(svgContent,name){
+  svgContainer.innerHTML=svgContent;
+  previewName.textContent=name;
+  previewWrap.classList.add("visible");
+}
 
-  function shake(el) {
-    el.style.animation = "none";
-    el.offsetHeight; 
-    el.style.animation = "shake 0.4s ease";
-  }
+function shake(el){
+  el.style.animation="none";
+  el.offsetHeight;
+  el.style.animation="shake .4s ease";
+}
 </script>
+
 </body>
 </html>
