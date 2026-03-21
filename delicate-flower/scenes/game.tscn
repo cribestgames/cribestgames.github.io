@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://knffu6kugr6o"]
+
+[ext_resource type="Script" uid="uid://cp8v6appe3c0" path="res://scripts/game.gd" id="1_lbhrr"]
+[ext_resource type="PackedScene" uid="uid://bxdosx6g4nllq" path="res://scenes/Player.tscn" id="1_lnu2h"]
+[ext_resource type="PackedScene" uid="uid://c1hl5gl5jds2" path="res://scenes/levels/level_0,0.tscn" id="2_yqjtg"]
+
+[node name="Game" type="Node2D" unique_id=1346393544]
+script = ExtResource("1_lbhrr")
+
+[node name="Player" parent="." unique_id=418128457 instance=ExtResource("1_lnu2h")]
+position = Vector2(0, 76.00001)
+scale = Vector2(10, 10)
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1385312450]
+position = Vector2(0, -20)
+zoom = Vector2(2, 2)
+
+[node name="level0,0" parent="." unique_id=613342739 instance=ExtResource("2_yqjtg")]
