@@ -62,8 +62,6 @@
       bottom:10px;
       color: #d3d3d3;
     }
-      
-    
   </style>
 </head>
 <body>
@@ -75,17 +73,14 @@
   <div class="absreset">absolute resets: 0</div>
   <div class="license">Copyright © 2025 cribest7890</div>
   <div class="shopinfo" style="position: absolute; top: 135px; right: 15px; font-size: 10px; color: white;">5 absolute reset = +0.1x click</div>
-  
 
-
-  
   <script>
     window.onload = function() {
       const pallina = document.querySelector('.pallina');
       const contatore = document.querySelector('.contatore');
       const monete = document.querySelector('.monete');
       const absreset = document.querySelector('.absreset');
-      const license = document.querySelector('.license')
+      const shopButton = document.getElementById("shopButton");
 
       let clickCount = parseInt(localStorage.getItem('clickCount')) || 0;
       let coinCount = parseInt(localStorage.getItem('coinCount')) || 0;
@@ -104,20 +99,16 @@
         pallina.style.height = pallinaSize + "px";
       }
 
-      function handleEvent(e) {
-        // Incrementa click solo al clic k
+      function handleClick() {
         clickCount += 1 * clickMultiplier;
 
-        // Cambia colore casuale
         const colore = "#" + Math.floor(Math.random() * 16777215).toString(16);
         pallina.style.backgroundColor = colore;
 
-        // Aumenta dimensione pallina
         pallinaSize *= 1.1 + coinCount * 0.01;
         pallina.style.width = pallinaSize + "px";
         pallina.style.height = pallinaSize + "px";
 
-        // Reset dimensione se supera max
         if (pallinaSize >= maxSize) {
           pallinaSize = 50 * 1.01;
           pallina.style.width = pallinaSize + "px";
@@ -125,57 +116,71 @@
           coinCount++;
         }
 
-        // Gestione absolute reset
         if (coinCount >= 700) {
           absresetCount++;
           coinCount -= 700;
           absreset.style.opacity = 1;
         }
 
-        // Aggiorna contatori visibili
         contatore.innerText = "click: " + clickCount.toFixed(1);
         monete.innerText = "resets: " + coinCount;
         absreset.innerText = "absolute resets: " + absresetCount;
 
-        const shopButton = document.getElementById("shopButton");
-
-        
-        
-        // Salva nello storage
         localStorage.setItem('clickCount', clickCount);
         localStorage.setItem('coinCount', coinCount);
         localStorage.setItem('absresetCount', absresetCount);
         localStorage.setItem('pallinaSize', pallinaSize);
-        
       }
 
-      shopButton.addEventListener("click", function (e) {
-          e.stopPropagation(); // evita che conti come click normale
-
-          if (absresetCount >= 5) {
-            absresetCount -= 5;
-            clickMultiplier += 0.1;
-            localStorage.setItem('clickMultiplier', clickMultiplier);
-    // QUI puoi mettere l'effetto dello shop
-    // esempio: bonus ai click
-    // clickMultiplier += 0.1;
-
-            absreset.innerText = "absolute resets: " + absresetCount;
-            localStorage.setItem('absresetCount', absresetCount);
+      shopButton.addEventListener("click", function(e) {
+        e.stopPropagation();
+        if (absresetCount >= 5) {
+          absresetCount -= 5;
+          clickMultiplier += 0.1;
+          localStorage.setItem('clickMultiplier', clickMultiplier);
+          absreset.innerText = "absolute resets: " + absresetCount;
+          localStorage.setItem('absresetCount', absresetCount);
         } else {
-            alert("Non hai abbastanza absolute resets!");
+          alert("Non hai abbastanza absolute resets!");
         }
-});
-      // Unico listener per click e tasti
-      document.addEventListener("click", handleEvent);
+      });
+
+      // Click mouse
+      document.addEventListener("click", function(e) {
+        if (e.target !== shopButton) handleClick();
+      });
+
+      // Tastiera (spazio)
       document.addEventListener("keyup", function(e) {
         if (e.code === "Space") {
-          handleEvent(e);
-      } else {
-          e.preventDefault(); // blocca altri tasti
-      }
-    });
-    }
+          handleClick();
+        } else {
+          e.preventDefault();
+        }
+      });
+
+      // Multi-touch: ogni dito che tocca conta come un click separato
+      document.addEventListener("touchstart", function(e) {
+        // Controlla che nessun dito stia toccando il pulsante shop
+        let shopTouched = false;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          const touch = e.changedTouches[i];
+          const target = document.elementFromPoint(touch.clientX, touch.clientY);
+          if (target === shopButton) {
+            shopTouched = true;
+            break;
+          }
+        }
+
+        if (!shopTouched) {
+          e.preventDefault(); // previene il click simulato dal browser
+          // Un handleClick per ogni dito attivo
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            handleClick();
+          }
+        }
+      }, { passive: false });
+    };
   </script>
 
 </body>
