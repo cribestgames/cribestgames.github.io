@@ -7,8 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CribestGames</title>
   <meta name="description" content="Play free browser games on CribestGames.">
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       background-color: rgb(54, 18, 18);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,6 +21,7 @@
       align-items: center;
       -webkit-tap-highlight-color: transparent;
     }
+
     header {
       width: 100%;
       display: flex;
@@ -26,19 +29,23 @@
       justify-content: space-between;
       padding: 14px 20px;
     }
+
     .back-btn {
       color: rgba(255,255,255,0.7);
       text-decoration: none;
       font-size: 14px;
       transition: color 0.2s;
     }
+
     .back-btn:hover { color: white; }
+
     .site-name {
       font-size: 15px;
       font-weight: 600;
       letter-spacing: 0.04em;
       color: rgba(255,255,255,0.85);
     }
+
     h1 {
       font-size: 22px;
       font-weight: 700;
@@ -47,6 +54,7 @@
       letter-spacing: 0.03em;
       text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
+
     .game-preview {
       width: 100%;
       max-width: 900px;
@@ -60,6 +68,7 @@
       align-items: center;
       justify-content: center;
     }
+
     .game-preview img {
       position: absolute;
       inset: 0;
@@ -68,6 +77,7 @@
       object-fit: cover;
       opacity: 0.45;
     }
+
     .play-btn {
       position: relative;
       z-index: 10;
@@ -76,14 +86,10 @@
       cursor: pointer;
       font-size: 90px;
       color: white;
-      line-height: 1;
       text-shadow: 0 0 40px rgba(0,0,0,0.8);
-      transition: transform 0.15s, opacity 0.15s;
       user-select: none;
-      -webkit-tap-highlight-color: transparent;
     }
-    .play-btn:hover { transform: scale(1.12); opacity: 0.85; }
-    .play-btn:active { transform: scale(0.95); }
+
     .iframe-wrap {
       display: none;
       width: 100%;
@@ -93,13 +99,24 @@
       overflow: hidden;
       background: black;
       box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+      position: relative;
     }
+
     .iframe-wrap iframe {
       width: 100%;
       height: 100%;
       border: none;
       display: block;
     }
+
+    /* 🔥 overlay per click fullscreen */
+    .fullscreen-catcher {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      cursor: pointer;
+    }
+
     .description {
       width: 100%;
       max-width: 900px;
@@ -110,12 +127,14 @@
       color: rgba(255,255,255,0.75);
       text-align: center;
     }
+
     .license {
       margin-top: auto;
       padding: 14px;
       color: rgba(255,255,255,0.4);
       font-size: 12px;
     }
+
     .error-msg {
       display: none;
       margin-top: 60px;
@@ -125,109 +144,87 @@
     }
   </style>
 </head>
+
 <body>
 
-  <header>
-    <a class="back-btn" id="back-btn" href="/">&#8592; Home</a>
-    <span class="site-name">CribestGames</span>
-    <span style="width:60px"></span>
-  </header>
+<header>
+  <a class="back-btn" id="back-btn" href="/">← Home</a>
+  <span class="site-name">CribestGames</span>
+  <span style="width:60px"></span>
+</header>
 
-  <h1 id="game-title">Loading&#8230;</h1>
+<h1 id="game-title">Loading…</h1>
 
-  <div class="game-preview" id="game-preview">
-    <img id="game-thumb" alt="" style="display:none">
-    <button class="play-btn" id="play-btn" title="Play">&#9654;</button>
-  </div>
+<div class="game-preview" id="game-preview">
+  <img id="game-thumb" alt="" style="display:none">
+  <button class="play-btn" id="play-btn">▶</button>
+</div>
 
-  <div class="iframe-wrap" id="iframe-wrap">
-    <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
-  </div>
+<div class="iframe-wrap" id="iframe-wrap">
+  <div class="fullscreen-catcher" id="fs-catcher"></div>
+  <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
+</div>
 
-  <p class="description" id="game-desc"></p>
-  <p class="error-msg" id="error-msg"></p>
+<p class="description" id="game-desc"></p>
+<p class="error-msg" id="error-msg"></p>
 
-  <div class="license">Copyright &copy; 2025-2026 cribest7890</div>
+<div class="license">Copyright © 2025-2026 cribest7890</div>
 
-  <script>
-    const params  = new URLSearchParams(window.location.search);
-    const gameKey = params.get('game');
+<script>
+  const params  = new URLSearchParams(window.location.search);
+  const gameKey = params.get('game');
 
-    // Rileva lingua: it, uk, altrimenti en
-    var rawLang = navigator.language || navigator.userLanguage || 'en';
-    var lang = rawLang.startsWith('it') ? 'it' : rawLang.startsWith('uk') ? 'uk' : 'en';
+  var rawLang = navigator.language || 'en';
+  var lang = rawLang.startsWith('it') ? 'it' : rawLang.startsWith('uk') ? 'uk' : 'en';
 
-    document.getElementById('back-btn').href = '/' + lang + '/';
+  document.getElementById('back-btn').href = '/' + lang + '/';
 
-    var errorMsgs = {
-      en: { noGame: 'No game specified.', notFound: 'Game not found. <a href="/en/" style="color:white">Go back home</a>' },
-      it: { noGame: 'Gioco non specificato.', notFound: 'Gioco non trovato. <a href="/it/" style="color:white">Torna alla home</a>' },
-      uk: { noGame: 'Гру не вказано.', notFound: 'Гру не знайдено. <a href="/uk/" style="color:white">Повернутись на головну</a>' }
-    };
+  let gameIframe = '';
 
-    let gameIframe = '';
+  if (gameKey) {
+    fetch('/data/' + lang + '/' + gameKey + '.json')
+      .then(res => res.json())
+      .then(data => {
+        gameIframe = data.iframe;
+        document.getElementById('game-title').textContent = data.title;
+        document.getElementById('game-desc').textContent = data.description;
 
-    if (!gameKey) {
-      showError(errorMsgs[lang].noGame);
-    } else {
-      fetch('/data/' + lang + '/' + gameKey + '.json')
-        .then(res => {
-          if (!res.ok) throw new Error('not found');
-          return res.json();
-        })
-        .then(data => {
-          gameIframe = data.iframe;
-          document.title = data.title + ' \u2013 CribestGames';
-          document.getElementById('game-title').textContent = data.title;
-          document.getElementById('game-desc').textContent  = data.description;
-          const thumb = document.getElementById('game-thumb');
-          thumb.onload  = () => { thumb.style.display = 'block'; };
-          thumb.onerror = () => { thumb.style.display = 'none'; };
-          thumb.src = '/assets/' + gameKey + '/logo.png';
-        })
-        .catch(() => {
-          showError(errorMsgs[lang].notFound);
-        });
-    }
-
-    document.getElementById('play-btn').addEventListener('click', function () {
-      if (!gameIframe) return;
-      const frame      = document.getElementById('game-frame');
-      const preview    = document.getElementById('game-preview');
-      const iframeWrap = document.getElementById('iframe-wrap');
-      frame.src = gameIframe;
-      preview.style.display    = 'none';
-      iframeWrap.style.display = 'block';
-      if (iframeWrap.requestFullscreen) {
-        iframeWrap.requestFullscreen();
-      } else if (iframeWrap.webkitRequestFullscreen) {
-        iframeWrap.webkitRequestFullscreen();
-      }
-    });
-
-    function showError(msg) {
-      document.getElementById('game-title').style.display   = 'none';
-      document.getElementById('game-preview').style.display = 'none';
-      document.getElementById('game-desc').style.display    = 'none';
-      const err = document.getElementById('error-msg');
-      err.innerHTML     = msg;
-      err.style.display = 'block';
-    }
-
-    const iframeWrap = document.getElementById('iframe-wrap');
-const frame = document.getElementById('game-frame');
-
-// click sul contenitore = torna fullscreen
-iframeWrap.addEventListener('click', () => {
-  if (!document.fullscreenElement) {
-    if (iframeWrap.requestFullscreen) {
-      iframeWrap.requestFullscreen();
-    } else if (iframeWrap.webkitRequestFullscreen) {
-      iframeWrap.webkitRequestFullscreen();
-    }
+        const thumb = document.getElementById('game-thumb');
+        thumb.src = '/assets/' + gameKey + '/logo.png';
+        thumb.style.display = 'block';
+      });
   }
-});
-  </script>
+
+  const frame = document.getElementById('game-frame');
+  const preview = document.getElementById('game-preview');
+  const iframeWrap = document.getElementById('iframe-wrap');
+  const catcher = document.getElementById('fs-catcher');
+
+  function enterFS() {
+    if (iframeWrap.requestFullscreen) iframeWrap.requestFullscreen();
+    else if (iframeWrap.webkitRequestFullscreen) iframeWrap.webkitRequestFullscreen();
+  }
+
+  document.getElementById('play-btn').addEventListener('click', () => {
+    if (!gameIframe) return;
+    frame.src = gameIframe;
+    preview.style.display = 'none';
+    iframeWrap.style.display = 'block';
+    enterFS();
+  });
+
+  // 🔥 click dopo uscita fullscreen
+  catcher.addEventListener('click', () => {
+    if (!document.fullscreenElement) {
+      enterFS();
+    }
+  });
+
+  // nasconde overlay in fullscreen
+  document.addEventListener('fullscreenchange', () => {
+    catcher.style.display = document.fullscreenElement ? 'none' : 'block';
+  });
+</script>
 
 </body>
 </html>
