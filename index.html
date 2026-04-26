@@ -14,6 +14,8 @@
       var lang = navigator.language || navigator.userLanguage || 'en';
       if (lang.startsWith('it')) {
         window.location.replace('/it/');
+      } else if (lang.startsWith('uk')) {
+        window.location.replace('/uk/');
       } else {
         window.location.replace('/en/');
       }
