@@ -142,7 +142,7 @@
 
   <!-- Anteprima con tasto play -->
   <div class="game-preview" id="game-preview">
-    <img id="game-thumb" src="" alt="" onerror="this.style.display='none'">
+    <img id="game-thumb" alt="" style="display:none">
     <button class="play-btn" id="play-btn" title="Play">&#9654;</button>
   </div>
 
@@ -178,8 +178,11 @@
           document.title = data.title + ' \u2013 CribestGames';
           document.getElementById('game-title').textContent = data.title;
           document.getElementById('game-desc').textContent  = data.description;
-          // Prova a caricare la thumbnail dagli assets
-          document.getElementById('game-thumb').src = '/assets/' + gameKey + '/logo.png';
+          // Carica la thumbnail solo se esiste
+          const thumb = document.getElementById('game-thumb');
+          thumb.onload  = () => { thumb.style.display = 'block'; };
+          thumb.onerror = () => { thumb.style.display = 'none'; };
+          thumb.src = '/assets/' + gameKey + '/logo.png';
         })
         .catch(() => {
           showError(lang === 'it'
