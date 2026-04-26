@@ -47,7 +47,49 @@
       letter-spacing: 0.03em;
       text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
+
+    /* Thumbnail / play area */
+    .game-preview {
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16/9;
+      border-radius: 10px;
+      overflow: hidden;
+      background: black;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .game-preview img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.45;
+    }
+    .play-btn {
+      position: relative;
+      z-index: 10;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 90px;
+      color: white;
+      line-height: 1;
+      text-shadow: 0 0 40px rgba(0,0,0,0.8);
+      transition: transform 0.15s, opacity 0.15s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .play-btn:hover { transform: scale(1.12); opacity: 0.85; }
+    .play-btn:active { transform: scale(0.95); }
+
+    /* Iframe (nascosto finché non si preme play) */
     .iframe-wrap {
+      display: none;
       width: 100%;
       max-width: 900px;
       aspect-ratio: 16/9;
@@ -62,6 +104,7 @@
       border: none;
       display: block;
     }
+
     .description {
       width: 100%;
       max-width: 900px;
@@ -95,23 +138,32 @@
     <span style="width:60px"></span>
   </header>
 
-  <h1 id="game-title">Loading…</h1>
+  <h1 id="game-title">Loading&#8230;</h1>
 
-  <div class="iframe-wrap">
+  <!-- Anteprima con tasto play -->
+  <div class="game-preview" id="game-preview">
+    <img id="game-thumb" src="" alt="" onerror="this.style.display='none'">
+    <button class="play-btn" id="play-btn" title="Play">&#9654;</button>
+  </div>
+
+  <!-- Iframe (appare solo dopo il click) -->
+  <div class="iframe-wrap" id="iframe-wrap">
     <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
   </div>
 
   <p class="description" id="game-desc"></p>
   <p class="error-msg" id="error-msg"></p>
 
-  <div class="license">Copyright © 2025-2026 cribest7890</div>
+  <div class="license">Copyright &copy; 2025-2026 cribest7890</div>
 
   <script>
-    const params = new URLSearchParams(window.location.search);
+    const params  = new URLSearchParams(window.location.search);
     const gameKey = params.get('game');
-    const lang = (navigator.language || navigator.userLanguage || 'en').startsWith('it') ? 'it' : 'en';
+    const lang    = (navigator.language || navigator.userLanguage || 'en').startsWith('it') ? 'it' : 'en';
 
     document.getElementById('back-btn').href = '/' + lang + '/';
+
+    let gameIframe = '';
 
     if (!gameKey) {
       showError(lang === 'it' ? 'Gioco non specificato.' : 'No game specified.');
@@ -122,10 +174,12 @@
           return res.json();
         })
         .then(data => {
-          document.title = data.title + ' – CribestGames';
+          gameIframe = data.iframe;
+          document.title = data.title + ' \u2013 CribestGames';
           document.getElementById('game-title').textContent = data.title;
-          document.getElementById('game-desc').textContent = data.description;
-          document.getElementById('game-frame').src = data.iframe;
+          document.getElementById('game-desc').textContent  = data.description;
+          // Prova a caricare la thumbnail dagli assets
+          document.getElementById('game-thumb').src = '/assets/' + gameKey + '/logo.png';
         })
         .catch(() => {
           showError(lang === 'it'
@@ -134,12 +188,34 @@
         });
     }
 
+    document.getElementById('play-btn').addEventListener('click', function () {
+      if (!gameIframe) return;
+
+      const frame     = document.getElementById('game-frame');
+      const preview   = document.getElementById('game-preview');
+      const iframeWrap = document.getElementById('iframe-wrap');
+
+      // Carica il gioco
+      frame.src = gameIframe;
+
+      // Scambia preview con iframe
+      preview.style.display    = 'none';
+      iframeWrap.style.display = 'block';
+
+      // Fullscreen sull'iframe
+      if (iframeWrap.requestFullscreen) {
+        iframeWrap.requestFullscreen();
+      } else if (iframeWrap.webkitRequestFullscreen) {
+        iframeWrap.webkitRequestFullscreen();
+      }
+    });
+
     function showError(msg) {
-      document.getElementById('game-title').style.display = 'none';
-      document.querySelector('.iframe-wrap').style.display = 'none';
-      document.getElementById('game-desc').style.display = 'none';
+      document.getElementById('game-title').style.display  = 'none';
+      document.getElementById('game-preview').style.display = 'none';
+      document.getElementById('game-desc').style.display   = 'none';
       const err = document.getElementById('error-msg');
-      err.innerHTML = msg;
+      err.innerHTML    = msg;
       err.style.display = 'block';
     }
   </script>
