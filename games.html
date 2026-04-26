@@ -213,6 +213,20 @@
       err.innerHTML     = msg;
       err.style.display = 'block';
     }
+
+    const iframeWrap = document.getElementById('iframe-wrap');
+const frame = document.getElementById('game-frame');
+
+// click sul contenitore = torna fullscreen
+iframeWrap.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    if (iframeWrap.requestFullscreen) {
+      iframeWrap.requestFullscreen();
+    } else if (iframeWrap.webkitRequestFullscreen) {
+      iframeWrap.webkitRequestFullscreen();
+    }
+  }
+});
   </script>
 
 </body>
