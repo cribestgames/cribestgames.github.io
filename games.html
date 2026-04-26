@@ -47,8 +47,6 @@
       letter-spacing: 0.03em;
       text-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-
-    /* Thumbnail / play area */
     .game-preview {
       width: 100%;
       max-width: 900px;
@@ -86,8 +84,6 @@
     }
     .play-btn:hover { transform: scale(1.12); opacity: 0.85; }
     .play-btn:active { transform: scale(0.95); }
-
-    /* Iframe (nascosto finché non si preme play) */
     .iframe-wrap {
       display: none;
       width: 100%;
@@ -104,7 +100,6 @@
       border: none;
       display: block;
     }
-
     .description {
       width: 100%;
       max-width: 900px;
@@ -140,13 +135,11 @@
 
   <h1 id="game-title">Loading&#8230;</h1>
 
-  <!-- Anteprima con tasto play -->
   <div class="game-preview" id="game-preview">
     <img id="game-thumb" alt="" style="display:none">
     <button class="play-btn" id="play-btn" title="Play">&#9654;</button>
   </div>
 
-  <!-- Iframe (appare solo dopo il click) -->
   <div class="iframe-wrap" id="iframe-wrap">
     <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
   </div>
@@ -159,14 +152,23 @@
   <script>
     const params  = new URLSearchParams(window.location.search);
     const gameKey = params.get('game');
-    const lang    = (navigator.language || navigator.userLanguage || 'en').startsWith('it') ? 'it' : 'en';
+
+    // Rileva lingua: it, uk, altrimenti en
+    var rawLang = navigator.language || navigator.userLanguage || 'en';
+    var lang = rawLang.startsWith('it') ? 'it' : rawLang.startsWith('uk') ? 'uk' : 'en';
 
     document.getElementById('back-btn').href = '/' + lang + '/';
+
+    var errorMsgs = {
+      en: { noGame: 'No game specified.', notFound: 'Game not found. <a href="/en/" style="color:white">Go back home</a>' },
+      it: { noGame: 'Gioco non specificato.', notFound: 'Gioco non trovato. <a href="/it/" style="color:white">Torna alla home</a>' },
+      uk: { noGame: 'Гру не вказано.', notFound: 'Гру не знайдено. <a href="/uk/" style="color:white">Повернутись на головну</a>' }
+    };
 
     let gameIframe = '';
 
     if (!gameKey) {
-      showError(lang === 'it' ? 'Gioco non specificato.' : 'No game specified.');
+      showError(errorMsgs[lang].noGame);
     } else {
       fetch('/data/' + lang + '/' + gameKey + '.json')
         .then(res => {
@@ -178,34 +180,24 @@
           document.title = data.title + ' \u2013 CribestGames';
           document.getElementById('game-title').textContent = data.title;
           document.getElementById('game-desc').textContent  = data.description;
-          // Carica la thumbnail solo se esiste
           const thumb = document.getElementById('game-thumb');
           thumb.onload  = () => { thumb.style.display = 'block'; };
           thumb.onerror = () => { thumb.style.display = 'none'; };
           thumb.src = '/assets/' + gameKey + '/logo.png';
         })
         .catch(() => {
-          showError(lang === 'it'
-            ? 'Gioco non trovato. <a href="/it/" style="color:white">Torna alla home</a>'
-            : 'Game not found. <a href="/en/" style="color:white">Go back home</a>');
+          showError(errorMsgs[lang].notFound);
         });
     }
 
     document.getElementById('play-btn').addEventListener('click', function () {
       if (!gameIframe) return;
-
-      const frame     = document.getElementById('game-frame');
-      const preview   = document.getElementById('game-preview');
+      const frame      = document.getElementById('game-frame');
+      const preview    = document.getElementById('game-preview');
       const iframeWrap = document.getElementById('iframe-wrap');
-
-      // Carica il gioco
       frame.src = gameIframe;
-
-      // Scambia preview con iframe
       preview.style.display    = 'none';
       iframeWrap.style.display = 'block';
-
-      // Fullscreen sull'iframe
       if (iframeWrap.requestFullscreen) {
         iframeWrap.requestFullscreen();
       } else if (iframeWrap.webkitRequestFullscreen) {
@@ -214,11 +206,11 @@
     });
 
     function showError(msg) {
-      document.getElementById('game-title').style.display  = 'none';
+      document.getElementById('game-title').style.display   = 'none';
       document.getElementById('game-preview').style.display = 'none';
-      document.getElementById('game-desc').style.display   = 'none';
+      document.getElementById('game-desc').style.display    = 'none';
       const err = document.getElementById('error-msg');
-      err.innerHTML    = msg;
+      err.innerHTML     = msg;
       err.style.display = 'block';
     }
   </script>
