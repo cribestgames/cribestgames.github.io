@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156802341247934" crossorigin="anonymous"></script>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CribestGames</title>
+  <meta name="description" content="Play free browser games on CribestGames.">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: rgb(54, 18, 18);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      -webkit-tap-highlight-color: transparent;
+    }
+    header {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+    }
+    .back-btn {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: white; }
+    .site-name {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.85);
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 6px 0 14px;
+      text-align: center;
+      letter-spacing: 0.03em;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .iframe-wrap {
+      width: 100%;
+      max-width: 900px;
+      aspect-ratio: 16/9;
+      border-radius: 10px;
+      overflow: hidden;
+      background: black;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.6);
+    }
+    .iframe-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    .description {
+      width: 100%;
+      max-width: 900px;
+      margin: 18px 0 30px;
+      padding: 0 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.75);
+      text-align: center;
+    }
+    .license {
+      margin-top: auto;
+      padding: 14px;
+      color: rgba(255,255,255,0.4);
+      font-size: 12px;
+    }
+    .error-msg {
+      display: none;
+      margin-top: 60px;
+      font-size: 18px;
+      color: rgba(255,255,255,0.6);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a class="back-btn" id="back-btn" href="/">&#8592; Home</a>
+    <span class="site-name">CribestGames</span>
+    <span style="width:60px"></span>
+  </header>
+
+  <h1 id="game-title">Loading…</h1>
+
+  <div class="iframe-wrap">
+    <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
+  </div>
+
+  <p class="description" id="game-desc"></p>
+  <p class="error-msg" id="error-msg"></p>
+
+  <div class="license">Copyright © 2025-2026 cribest7890</div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const gameKey = params.get('game');
+    const lang = (navigator.language || navigator.userLanguage || 'en').startsWith('it') ? 'it' : 'en';
+
+    document.getElementById('back-btn').href = '/' + lang + '/';
+
+    if (!gameKey) {
+      showError(lang === 'it' ? 'Gioco non specificato.' : 'No game specified.');
+    } else {
+      fetch('/data/' + lang + '/' + gameKey + '.json')
+        .then(res => {
+          if (!res.ok) throw new Error('not found');
+          return res.json();
+        })
+        .then(data => {
+          document.title = data.title + ' – CribestGames';
+          document.getElementById('game-title').textContent = data.title;
+          document.getElementById('game-desc').textContent = data.description;
+          document.getElementById('game-frame').src = data.iframe;
+        })
+        .catch(() => {
+          showError(lang === 'it'
+            ? 'Gioco non trovato. <a href="/it/" style="color:white">Torna alla home</a>'
+            : 'Game not found. <a href="/en/" style="color:white">Go back home</a>');
+        });
+    }
+
+    function showError(msg) {
+      document.getElementById('game-title').style.display = 'none';
+      document.querySelector('.iframe-wrap').style.display = 'none';
+      document.getElementById('game-desc').style.display = 'none';
+      const err = document.getElementById('error-msg');
+      err.innerHTML = msg;
+      err.style.display = 'block';
+    }
+  </script>
+
+</body>
+</html>
