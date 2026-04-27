@@ -180,12 +180,14 @@
   document.getElementById('back-btn').href = '/' + lang + '/';
 
   let gameIframe = '';
+  let forceLandscape = false;
 
   if (gameKey) {
     fetch('/data/' + lang + '/' + gameKey + '.json')
       .then(res => res.json())
       .then(data => {
         gameIframe = data.iframe;
+        forceLandscape = !!data.landscape;
         document.getElementById('game-title').textContent = data.title;
         document.getElementById('game-desc').textContent = data.description;
 
@@ -201,8 +203,17 @@
   const catcher = document.getElementById('fs-catcher');
 
   function enterFS() {
-    if (iframeWrap.requestFullscreen) iframeWrap.requestFullscreen();
-    else if (iframeWrap.webkitRequestFullscreen) iframeWrap.webkitRequestFullscreen();
+    const req = iframeWrap.requestFullscreen
+      ? iframeWrap.requestFullscreen()
+      : iframeWrap.webkitRequestFullscreen
+        ? iframeWrap.webkitRequestFullscreen()
+        : Promise.resolve();
+
+    req.then(() => {
+      if (forceLandscape && screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('landscape').catch(() => {});
+      }
+    }).catch(() => {});
   }
 
   document.getElementById('play-btn').addEventListener('click', () => {
