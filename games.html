@@ -266,13 +266,18 @@
   function exitFakeFS() {
     fakeFs.classList.remove('active');
     document.body.style.overflow = '';
-    frameFs.src = 'about:blank';
-    preview.style.display = '';   // ripristina il preview con il tasto play
+    // NON resettare frameFs.src — il gioco resta in memoria
+    preview.style.display = '';
   }
+
+  let gameStarted = false;
 
   document.getElementById('play-btn').addEventListener('click', () => {
     if (!gameIframe) return;
-    frameFs.src = gameIframe;
+    if (!gameStarted) {
+      frameFs.src = gameIframe;
+      gameStarted = true;
+    }
     preview.style.display = 'none';
     enterFakeFS();
   });
