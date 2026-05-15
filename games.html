@@ -13,6 +13,13 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
+    /* Blocca pull-to-refresh e overscroll su iOS/Android */
+    html, body {
+      overscroll-behavior: none;
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: auto;
+    }
+
     body {
       background-color: rgb(54, 18, 18);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -92,32 +99,71 @@
       user-select: none;
     }
 
-    .iframe-wrap {
+    /* ── FAKE FULLSCREEN OVERLAY ── */
+    #fake-fs {
       display: none;
-      width: 100%;
-      max-width: 900px;
-      aspect-ratio: 16/9;
-      border-radius: 10px;
-      overflow: hidden;
-      background: black;
-      box-shadow: 0 4px 30px rgba(0,0,0,0.6);
-      position: relative;
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: rgb(54, 18, 18); /* stesso colore della pagina */
+      flex-direction: row;
     }
 
-    .iframe-wrap iframe {
+    #fake-fs.active {
+      display: flex;
+    }
+
+    /* Barra sinistra 20px */
+    #fs-sidebar {
+      width: 20px;
+      flex-shrink: 0;
+      background: rgb(54, 18, 18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+      z-index: 2;
+    }
+
+    #fs-exit-label {
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+      transform: rotate(180deg);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.55);
+      text-transform: uppercase;
+      transition: color 0.2s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #fs-sidebar:hover #fs-exit-label,
+    #fs-sidebar:active #fs-exit-label {
+      color: rgba(255,255,255,0.95);
+    }
+
+    /* Contenitore iframe: occupa il resto (calc 100% - 20px) */
+    #fs-iframe-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background: black;
+    }
+
+    #fs-iframe-container iframe {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       border: none;
       display: block;
     }
 
-    /* 🔥 overlay per click fullscreen */
-    .fullscreen-catcher {
-      position: absolute;
-      inset: 0;
-      z-index: 5;
-      cursor: pointer;
-    }
+    /* ── fine fake fullscreen ── */
 
     .description {
       width: 100%;
@@ -149,6 +195,16 @@
 
 <body>
 
+<!-- FAKE FULLSCREEN -->
+<div id="fake-fs">
+  <div id="fs-sidebar" title="Exit">
+    <span id="fs-exit-label">Exit</span>
+  </div>
+  <div id="fs-iframe-container">
+    <iframe id="game-frame-fs" src="about:blank" allowfullscreen></iframe>
+  </div>
+</div>
+
 <header>
   <a class="back-btn" id="back-btn" href="/">← Home</a>
   <span class="site-name">CribestGames</span>
@@ -160,11 +216,6 @@
 <div class="game-preview" id="game-preview">
   <img id="game-thumb" alt="" style="display:none">
   <button class="play-btn" id="play-btn">▶</button>
-</div>
-
-<div class="iframe-wrap" id="iframe-wrap">
-  <div class="fullscreen-catcher" id="fs-catcher"></div>
-  <iframe id="game-frame" src="about:blank" allowfullscreen></iframe>
 </div>
 
 <p class="description" id="game-desc"></p>
@@ -181,15 +232,17 @@
 
   document.getElementById('back-btn').href = '/' + lang + '/';
 
+  // Etichetta exit in base alla lingua
+  var exitLabels = { en: 'Exit', it: 'Esci', uk: 'Вийти' };
+  document.getElementById('fs-exit-label').textContent = exitLabels[lang] || 'Exit';
+
   let gameIframe = '';
-  let forceLandscape = false;
 
   if (gameKey) {
     fetch('/data/' + lang + '/' + gameKey + '.json')
       .then(res => res.json())
       .then(data => {
         gameIframe = data.iframe;
-        forceLandscape = !!data.landscape;
         document.getElementById('game-title').textContent = data.title;
         document.getElementById('game-desc').textContent = data.description;
 
@@ -199,44 +252,36 @@
       });
   }
 
-  const frame = document.getElementById('game-frame');
-  const preview = document.getElementById('game-preview');
-  const iframeWrap = document.getElementById('iframe-wrap');
-  const catcher = document.getElementById('fs-catcher');
+  const fakeFs   = document.getElementById('fake-fs');
+  const frameFs  = document.getElementById('game-frame-fs');
+  const preview  = document.getElementById('game-preview');
+  const sidebar  = document.getElementById('fs-sidebar');
 
-  function enterFS() {
-    const req = iframeWrap.requestFullscreen
-      ? iframeWrap.requestFullscreen()
-      : iframeWrap.webkitRequestFullscreen
-        ? iframeWrap.webkitRequestFullscreen()
-        : Promise.resolve();
+  function enterFakeFS() {
+    fakeFs.classList.add('active');
+    // Blocca lo scroll della pagina sottostante
+    document.body.style.overflow = 'hidden';
+  }
 
-    req.then(() => {
-      if (forceLandscape && screen.orientation && screen.orientation.lock) {
-        screen.orientation.lock('landscape').catch(() => {});
-      }
-    }).catch(() => {});
+  function exitFakeFS() {
+    fakeFs.classList.remove('active');
+    document.body.style.overflow = '';
+    frameFs.src = 'about:blank';
   }
 
   document.getElementById('play-btn').addEventListener('click', () => {
     if (!gameIframe) return;
-    frame.src = gameIframe;
+    frameFs.src = gameIframe;
     preview.style.display = 'none';
-    iframeWrap.style.display = 'block';
-    enterFS();
+    enterFakeFS();
   });
 
-  // 🔥 click dopo uscita fullscreen
-  catcher.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      enterFS();
-    }
-  });
+  sidebar.addEventListener('click', exitFakeFS);
 
-  // nasconde overlay in fullscreen
-  document.addEventListener('fullscreenchange', () => {
-    catcher.style.display = document.fullscreenElement ? 'none' : 'block';
-  });
+  // Blocca swipe-down per ricaricare su iOS (touchmove sul fake-fs)
+  fakeFs.addEventListener('touchmove', function(e) {
+    e.preventDefault();
+  }, { passive: false });
 </script>
 
 </body>
