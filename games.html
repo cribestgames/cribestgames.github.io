@@ -267,6 +267,7 @@
     fakeFs.classList.remove('active');
     document.body.style.overflow = '';
     frameFs.src = 'about:blank';
+    preview.style.display = '';   // ripristina il preview con il tasto play
   }
 
   document.getElementById('play-btn').addEventListener('click', () => {
