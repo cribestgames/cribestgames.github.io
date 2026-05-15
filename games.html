@@ -257,19 +257,60 @@
   const preview  = document.getElementById('game-preview');
   const sidebar  = document.getElementById('fs-sidebar');
 
+  // true = mobile/touch, false = desktop
+  const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+  /* ── FAKE FULLSCREEN (mobile) ── */
   function enterFakeFS() {
     fakeFs.classList.add('active');
-    // Blocca lo scroll della pagina sottostante
     document.body.style.overflow = 'hidden';
   }
 
   function exitFakeFS() {
     fakeFs.classList.remove('active');
     document.body.style.overflow = '';
-    // NON resettare frameFs.src — il gioco resta in memoria
     preview.style.display = '';
   }
 
+  /* ── NATIVE FULLSCREEN (desktop) ── */
+  function enterNativeFS() {
+    const req = fakeFs.requestFullscreen
+      ? fakeFs.requestFullscreen()
+      : fakeFs.webkitRequestFullscreen
+        ? fakeFs.webkitRequestFullscreen()
+        : Promise.resolve();
+    req.catch(() => {});
+  }
+
+  function exitNativeFS() {
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    }
+    // exitFakeFS viene chiamato da fullscreenchange
+  }
+
+  // Su desktop, quando il browser esce dal fullscreen nativo ripristina il preview
+  document.addEventListener('fullscreenchange', () => {
+    if (!isMobile && !document.fullscreenElement) {
+      exitFakeFS();
+    }
+  });
+  document.addEventListener('webkitfullscreenchange', () => {
+    if (!isMobile && !document.webkitFullscreenElement) {
+      exitFakeFS();
+    }
+  });
+
+  /* ── tasto Exit ── */
+  sidebar.addEventListener('click', () => {
+    if (isMobile) {
+      exitFakeFS();
+    } else {
+      exitNativeFS();
+    }
+  });
+
+  /* ── Play button ── */
   let gameStarted = false;
 
   document.getElementById('play-btn').addEventListener('click', () => {
@@ -279,10 +320,14 @@
       gameStarted = true;
     }
     preview.style.display = 'none';
-    enterFakeFS();
+    if (isMobile) {
+      enterFakeFS();
+    } else {
+      // Su desktop: mostra il fake-fs e poi chiede il fullscreen nativo
+      enterFakeFS();
+      enterNativeFS();
+    }
   });
-
-  sidebar.addEventListener('click', exitFakeFS);
 
   // Blocca swipe-down per ricaricare su iOS (touchmove sul fake-fs)
   fakeFs.addEventListener('touchmove', function(e) {
