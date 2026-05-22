@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -10,7 +11,6 @@
 
   <title>Login - CribestGames</title>
 
-  <!-- SUPABASE -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
@@ -56,12 +56,23 @@
 
     h1 {
 
-      margin: 0 0 28px 0;
+      margin: 0;
 
       text-align: center;
 
-      font-size: 48px;
+      font-size: 42px;
       font-weight: 700;
+    }
+
+    .subtitle {
+
+      margin-top: 5px;
+      margin-bottom: 28px;
+
+      text-align: center;
+
+      color:
+        rgba(255,255,255,0.65);
     }
 
     input {
@@ -87,17 +98,6 @@
       outline: none;
 
       box-sizing: border-box;
-
-      transition: 0.2s;
-    }
-
-    input:focus {
-
-      background:
-        rgba(255,255,255,0.18);
-
-      border-color:
-        rgba(255,255,255,0.3);
     }
 
     input::placeholder {
@@ -117,18 +117,12 @@
       border-radius: 12px;
 
       font-size: 15px;
+
       font-weight: bold;
 
       cursor: pointer;
 
-      transition: 0.2s;
-
-      margin-top: 6px;
-    }
-
-    button:hover {
-
-      transform: scale(1.02);
+      margin-top: 8px;
     }
 
     .login-btn {
@@ -145,134 +139,6 @@
       color: white;
     }
 
-    .gsi-material-button {
-
-  -moz-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-
-  -webkit-appearance: none;
-
-  background-color: white;
-
-  border: 1px solid #747775;
-
-  border-radius: 20px;
-
-  box-sizing: border-box;
-
-  color: #1f1f1f;
-
-  cursor: pointer;
-
-  font-family:
-    'Roboto',
-    arial,
-    sans-serif;
-
-  font-size: 14px;
-
-  height: 44px;
-
-  letter-spacing: 0.25px;
-
-  outline: none;
-
-  overflow: hidden;
-
-  padding: 0 12px;
-
-  position: relative;
-
-  text-align: center;
-
-  transition:
-    background-color .218s,
-    border-color .218s,
-    box-shadow .218s;
-
-  vertical-align: middle;
-
-  white-space: nowrap;
-
-  width: 100%;
-
-  margin-top: 16px;
-}
-
-.gsi-material-button:hover {
-
-  box-shadow:
-    0 1px 2px 0 rgba(60,64,67,.30),
-    0 1px 3px 1px rgba(60,64,67,.15);
-}
-
-.gsi-material-button .gsi-material-button-state {
-
-  transition: opacity .218s;
-
-  bottom: 0;
-  left: 0;
-  opacity: 0;
-  position: absolute;
-  right: 0;
-  top: 0;
-}
-
-.gsi-material-button:hover
-.gsi-material-button-state {
-
-  background-color: #303030;
-
-  opacity: 8%;
-}
-
-.gsi-material-button-content-wrapper {
-
-  align-items: center;
-
-  display: flex;
-
-  flex-direction: row;
-
-  flex-wrap: nowrap;
-
-  height: 100%;
-
-  justify-content: center;
-
-  position: relative;
-
-  width: 100%;
-}
-
-.gsi-material-button-icon {
-
-  height: 20px;
-
-  margin-right: 12px;
-
-  min-width: 20px;
-
-  width: 20px;
-}
-
-.gsi-material-button-contents {
-
-  font-family:
-    'Roboto',
-    arial,
-    sans-serif;
-
-  font-weight: 500;
-
-  overflow: hidden;
-
-  text-overflow: ellipsis;
-
-  vertical-align: top;
-}
-
     .divider {
 
       margin: 18px 0;
@@ -281,8 +147,6 @@
 
       color:
         rgba(255,255,255,0.45);
-
-      font-size: 13px;
     }
 
     .status {
@@ -294,8 +158,6 @@
       color:
         rgba(255,255,255,0.8);
 
-      font-size: 14px;
-
       min-height: 20px;
     }
 
@@ -305,44 +167,90 @@
 
       text-align: center;
 
-      margin-top: 22px;
+      margin-top: 20px;
 
       color:
-        rgba(255,255,255,0.55);
+        rgba(255,255,255,0.6);
 
       text-decoration: none;
-
-      font-size: 14px;
     }
 
-    .back:hover {
+    .gsi-material-button {
 
-      color: white;
+      background: white;
+
+      border: 1px solid #747775;
+
+      border-radius: 20px;
+
+      cursor: pointer;
+
+      height: 44px;
+
+      width: 100%;
+
+      margin-top: 12px;
+
+      position: relative;
+
+      overflow: hidden;
+    }
+
+    .gsi-material-button-content-wrapper {
+
+      display: flex;
+
+      align-items: center;
+
+      justify-content: center;
+
+      height: 100%;
+    }
+
+    .gsi-material-button-icon {
+
+      width: 20px;
+      height: 20px;
+
+      margin-right: 12px;
+    }
+
+    .gsi-material-button-contents {
+
+      font-family:
+        Roboto,
+        sans-serif;
+
+      font-weight: 500;
+
+      color: #1f1f1f;
     }
 
   </style>
-</head>
 
+</head>
 <body>
 
   <div class="login-box">
 
-    <h1 id="title">
-      Login
+    <h1>
+      CribestGames
     </h1>
+
+    <p class="subtitle">
+      Login
+    </p>
 
     <input
       type="email"
       id="email"
       placeholder="Email"
-      autocomplete="email"
     >
 
     <input
       type="password"
       id="password"
       placeholder="Password"
-      autocomplete="current-password"
     >
 
     <button
@@ -359,71 +267,63 @@
       Register
     </button>
 
-    <div
-      class="divider"
-      id="orText"
-    >
+    <div class="divider">
       OR
     </div>
 
     <button
-  class="gsi-material-button"
-  id="googleBtn"
->
+      class="gsi-material-button"
+      id="googleBtn"
+    >
 
-  <div class="gsi-material-button-state"></div>
-
-  <div class="gsi-material-button-content-wrapper">
-
-    <div class="gsi-material-button-icon">
-
-      <svg
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 48 48"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-        style="display: block;"
+      <div
+        class="gsi-material-button-content-wrapper"
       >
 
-        <path
-          fill="#EA4335"
-          d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-        ></path>
+        <div
+          class="gsi-material-button-icon"
+        >
 
-        <path
-          fill="#4285F4"
-          d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-        ></path>
+          <svg
+            version="1.1"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 48 48"
+            style="display:block;"
+          >
 
-        <path
-          fill="#FBBC05"
-          d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-        ></path>
+            <path
+              fill="#EA4335"
+              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+            ></path>
 
-        <path
-          fill="#34A853"
-          d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-        ></path>
+            <path
+              fill="#4285F4"
+              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+            ></path>
 
-        <path
-          fill="none"
-          d="M0 0h48v48H0z"
-        ></path>
+            <path
+              fill="#FBBC05"
+              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+            ></path>
 
-      </svg>
+            <path
+              fill="#34A853"
+              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+            ></path>
 
-    </div>
+          </svg>
 
-    <span
-      class="gsi-material-button-contents"
-      id="googleText"
-    >
-      Continue with Google
-    </span>
+        </div>
 
-  </div>
+        <span
+          class="gsi-material-button-contents"
+        >
+          Continue with Google
+        </span>
 
-</button>
+      </div>
+
+    </button>
 
     <div
       class="status"
@@ -433,7 +333,6 @@
     <a
       class="back"
       href="/"
-      id="backBtn"
     >
       ← Back
     </a>
@@ -442,310 +341,112 @@
 
   <script>
 
-    // ====================================
-    // SUPABASE
-    // ====================================
-
     const SUPABASE_URL =
       "https://ysffeiaeuuuhfxkwtumt.supabase.co";
 
     const SUPABASE_KEY =
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
 
-    // FIX IMPORT
     const client =
       window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_KEY
       );
 
-    // ====================================
-    // TRADUZIONI
-    // ====================================
-
-    const lang =
-      navigator.language.toLowerCase();
-
-    const translations = {
-
-      it: {
-
-        title: "Login",
-
-        login: "Accedi",
-
-        register: "Registrati",
-
-        google:
-          "Continua con Google",
-
-        back:
-          "← Torna alla home",
-
-        or: "OPPURE",
-
-        loginSuccess:
-          "Login effettuato!",
-
-        registerSuccess:
-          "Account creato!",
-
-        fillFields:
-          "Compila tutti i campi"
-      },
-
-      en: {
-
-        title: "Login",
-
-        login: "Login",
-
-        register: "Register",
-
-        google:
-          "Continue with Google",
-
-        back:
-          "← Back to home",
-
-        or: "OR",
-
-        loginSuccess:
-          "Login successful!",
-
-        registerSuccess:
-          "Account created!",
-
-        fillFields:
-          "Fill all fields"
-      },
-
-      uk: {
-
-        title: "Вхід",
-
-        login: "Увійти",
-
-        register: "Реєстрація",
-
-        google:
-          "Продовжити через Google",
-
-        back:
-          "← Назад",
-
-        or: "АБО",
-
-        loginSuccess:
-          "Успішний вхід!",
-
-        registerSuccess:
-          "Акаунт створено!",
-
-        fillFields:
-          "Заповніть усі поля"
-      }
-    };
-
-    let t = translations.en;
-
-    if (lang.startsWith("it")) {
-      t = translations.it;
-    }
-
-    else if (lang.startsWith("uk")) {
-      t = translations.uk;
-    }
-
-    // ====================================
-    // TESTI
-    // ====================================
-
-    document.getElementById("title")
-      .innerText = t.title;
-
-    document.getElementById("loginBtn")
-      .innerText = t.login;
-
-    document.getElementById("registerBtn")
-      .innerText = t.register;
-
-    document.getElementById("googleText")
-      .innerText = t.google;
-
-    document.getElementById("backBtn")
-      .innerText = t.back;
-
-    document.getElementById("orText")
-      .innerText = t.or;
-
-    // ====================================
-    // STATUS
-    // ====================================
-
     function setStatus(text) {
 
-      document.getElementById("status")
+      document
+        .getElementById("status")
         .innerText = text;
     }
-
-    // ====================================
-    // LOGIN
-    // ====================================
 
     async function login() {
 
       const email =
-        document.getElementById("email")
-          .value.trim();
+        document
+          .getElementById("email")
+          .value;
 
       const password =
-        document.getElementById("password")
-          .value.trim();
+        document
+          .getElementById("password")
+          .value;
 
-      if (!email || !password) {
-
-        setStatus(t.fillFields);
-
-        return;
-      }
-
-      try {
-
-        const { error } =
-          await client.auth
-            .signInWithPassword({
-
-              email,
-              password
-            });
-
-        if (error) {
-
-          setStatus(error.message);
-
-          return;
-        }
-
-        setStatus(
-          t.loginSuccess
-        );
-
-        setTimeout(() => {
-
-          window.location.href = "/";
-
-        }, 1000);
-
-      } catch (err) {
-
-        setStatus(err.message);
-      }
-    }
-
-    // ====================================
-    // REGISTER
-    // ====================================
-
-    async function register() {
-
-      const email =
-        document.getElementById("email")
-          .value.trim();
-
-      const password =
-        document.getElementById("password")
-          .value.trim();
-
-      if (!email || !password) {
-
-        setStatus(t.fillFields);
-
-        return;
-      }
-
-      try {
-
-        const { error } =
-          await client.auth.signUp({
+      const { error } =
+        await client.auth
+          .signInWithPassword({
 
             email,
             password
           });
 
-        if (error) {
+      if (error) {
 
-          setStatus(error.message);
+        setStatus(error.message);
 
-          return;
-        }
-
-        setStatus(
-          t.registerSuccess
-        );
-
-      } catch (err) {
-
-        setStatus(err.message);
+        return;
       }
+
+      window.location.href = "/";
     }
 
-    // ====================================
-    // GOOGLE
-    // ====================================
+    async function register() {
+
+      const email =
+        document
+          .getElementById("email")
+          .value;
+
+      const password =
+        document
+          .getElementById("password")
+          .value;
+
+      const { error } =
+        await client.auth.signUp({
+
+          email,
+          password
+        });
+
+      if (error) {
+
+        setStatus(error.message);
+
+        return;
+      }
+
+      setStatus(
+        "Account created!"
+      );
+    }
 
     async function googleLogin() {
 
-      try {
+      await client.auth
+        .signInWithOAuth({
 
-        const { error } =
-          await client.auth
-            .signInWithOAuth({
+          provider: "google",
 
-              provider: "google",
+          options: {
 
-              options: {
-
-                redirectTo:
-                  "https://cribestgames.github.io"
-              }
-            });
-
-        if (error) {
-
-          setStatus(error.message);
-        }
-
-      } catch (err) {
-
-        setStatus(err.message);
-      }
+            redirectTo:
+              "https://cribestgames.github.io"
+          }
+        });
     }
-
-    // ====================================
-    // EVENTS
-    // ====================================
 
     document
       .getElementById("loginBtn")
-      .addEventListener(
-        "click",
-        login
-      );
+      .onclick = login;
 
     document
       .getElementById("registerBtn")
-      .addEventListener(
-        "click",
-        register
-      );
+      .onclick = register;
 
     document
       .getElementById("googleBtn")
-      .addEventListener(
-        "click",
-        googleLogin
-      );
+      .onclick = googleLogin;
 
   </script>
 
