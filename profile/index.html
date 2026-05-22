@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile</title>
-  <script src="https://jsdelivr.net"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     body {
       margin: 0;
@@ -41,7 +41,7 @@
       display: block;
       margin-bottom: 5px;
     }
-    input[type="text"] {
+    input {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
@@ -50,11 +50,6 @@
       background: rgba(0,0,0,0.2);
       color: white;
       box-sizing: border-box;
-    }
-    input[type="file"] {
-      margin-bottom: 15px;
-      color: #ccc;
-      font-size: 14px;
     }
     button {
       width: 100%;
@@ -71,11 +66,6 @@
       background: #4CAF50;
       color: white;
     }
-    button:disabled {
-      background: #555;
-      color: #aaa;
-      cursor: not-allowed;
-    }
   </style>
 </head>
 <body>
@@ -85,107 +75,74 @@
     <h1 id="name">User</h1>
     <p id="email"></p>
 
+    <!-- Nuovi campi di input per la modifica -->
     <div class="edit-inputs">
       <label for="input-name">Nuovo Nome</label>
       <input type="text" id="input-name" placeholder="Inserisci nome">
 
-      <label for="input-file">Carica Nuova Immagine</label>
-      <input type="file" id="input-file" accept="image/*">
+      <label for="input-avatar">URL Nuova Immagine</label>
+      <input type="text" id="input-avatar" placeholder="https://link-immagine.com">
     </div>
 
-    <button id="btn-save" class="btn-save" onclick="updateProfile()">Salva Modifiche</button>
+    <button class="btn-save" onclick="updateProfile()">Salva Modifiche</button>
     <button onclick="logout()">Logout</button>
   </div>
 
   <script>
-  const SUPABASE_URL = "https://supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
-  
-  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  let currentUser = null;
-
-  async function loadUser() {
-    const { data: { user } } = await client.auth.getUser();
-
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    currentUser = user;
-
-    document.getElementById("email").innerText = user.email;
+    const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
     
-    const currentName = user.user_metadata?.full_name || "User";
-    const currentAvatar = user.user_metadata?.avatar_url || "https://flaticon.com";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    document.getElementById("name").innerText = currentName;
-    document.getElementById("avatar").src = currentAvatar;
-    document.getElementById("input-name").value = currentName;
-    document.getElementById("input-file").value = ""; 
-  }
+    async function loadUser() {
+      const { data: { user } } = await client.auth.getUser();
 
-  async function updateProfile() {
-    const btnSave = document.getElementById("btn-save");
-    const newName = document.getElementById("input-name").value;
-    const fileInput = document.getElementById("input-file");
-    
-    // CORREZIONE: Prendiamo il primo file della lista [0]
-    const file = fileInput.files[0]; 
-    
-    let avatarUrl = currentUser.user_metadata?.avatar_url;
-
-    btnSave.disabled = true;
-    btnSave.innerText = "Salvataggio in corso...";
-
-    // Se l'utente ha selezionato un file, facciamo l'upload
-    if (file) {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
-
-      const { data: uploadData, error: uploadError } = await client.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) {
-        alert("Errore nel caricamento dell'immagine: " + uploadError.message);
-        btnSave.disabled = false;
-        btnSave.innerText = "Salva Modifiche";
+      if (!user) {
+        window.location.href = "/login";
         return;
       }
 
-      const { data: { publicUrl } } = client.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
+      // Mostra i dati attuali del profilo
+      document.getElementById("email").innerText = user.email;
+      
+      const currentName = user.user_metadata?.full_name || "User";
+      const currentAvatar = user.user_metadata?.avatar_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
-      avatarUrl = publicUrl;
+      document.getElementById("name").innerText = currentName;
+      document.getElementById("avatar").src = currentAvatar;
+
+      // Inserisce i valori attuali dentro gli input come predefiniti
+      document.getElementById("input-name").value = currentName;
+      document.getElementById("input-avatar").value = currentAvatar;
     }
 
-    // Aggiorna i metadati dell'utente
-    const { error: authError } = await client.auth.updateUser({
-      data: { 
-        full_name: newName,
-        avatar_url: avatarUrl
+    // Nuova funzione per salvare le modifiche su Supabase
+    async function updateProfile() {
+      const newName = document.getElementById("input-name").value;
+      const newAvatar = document.getElementById("input-avatar").value;
+
+      const { data, error } = await client.auth.updateUser({
+        data: { 
+          full_name: newName,
+          avatar_url: newAvatar
+        }
+      });
+
+      if (error) {
+        alert("Errore durante l'aggiornamento: " + error.message);
+      } else {
+        alert("Profilo aggiornato con successo!");
+        // Ricarica la UI con i nuovi dati salvati
+        loadUser();
       }
-    });
-
-    if (authError) {
-      alert("Errore durante l'aggiornamento del profilo: " + authError.message);
-    } else {
-      alert("Profilo aggiornato con successo!");
-      await loadUser();
     }
 
-    btnSave.disabled = false;
-    btnSave.innerText = "Salva Modifiche";
-  }
+    async function logout() {
+      await client.auth.signOut();
+      window.location.href = "/login";
+    }
 
-  async function logout() {
-    await client.auth.signOut();
-    window.location.href = "/login";
-  }
-
-  loadUser();
-</script>
+    loadUser();
+  </script>
 </body>
 </html>
