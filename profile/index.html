@@ -1,174 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Profile</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-
     body {
-
       margin: 0;
-
       background: rgb(54,18,18);
-
       color: white;
-
-      font-family:
-        'Segoe UI',
-        sans-serif;
-
+      font-family: 'Segoe UI', sans-serif;
       display: flex;
-
       justify-content: center;
       align-items: center;
-
       height: 100vh;
     }
-
     .profile-box {
-
       width: 340px;
-
       padding: 35px;
-
       border-radius: 20px;
-
-      background:
-        rgba(255,255,255,0.05);
-
+      background: rgba(255,255,255,0.05);
       backdrop-filter: blur(10px);
-
       text-align: center;
     }
-
     .avatar {
-
       width: 100px;
       height: 100px;
-
       border-radius: 50%;
-
       object-fit: cover;
-
       margin-bottom: 18px;
     }
-
-    button {
-
-      width: 100%;
-
-      padding: 12px;
-
-      border: none;
-
-      border-radius: 12px;
-
-      background: white;
-
-      color: black;
-
-      font-weight: bold;
-
+    .edit-inputs {
       margin-top: 20px;
-
+      text-align: left;
+    }
+    label {
+      font-size: 12px;
+      color: #ccc;
+      display: block;
+      margin-bottom: 5px;
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(0,0,0,0.2);
+      color: white;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 12px;
+      background: white;
+      color: black;
+      font-weight: bold;
+      margin-top: 10px;
       cursor: pointer;
     }
-
+    .btn-save {
+      background: #4CAF50;
+      color: white;
+    }
   </style>
-
 </head>
 <body>
 
   <div class="profile-box">
-
-    <img
-      id="avatar"
-      class="avatar"
-    >
-
-    <h1 id="name">
-      User
-    </h1>
-
+    <img id="avatar" class="avatar">
+    <h1 id="name">User</h1>
     <p id="email"></p>
 
-    <button onclick="logout()">
-      Logout
-    </button>
+    <!-- Nuovi campi di input per la modifica -->
+    <div class="edit-inputs">
+      <label for="input-name">Nuovo Nome</label>
+      <input type="text" id="input-name" placeholder="Inserisci nome">
 
+      <label for="input-avatar">URL Nuova Immagine</label>
+      <input type="text" id="input-avatar" placeholder="https://link-immagine.com">
+    </div>
+
+    <button class="btn-save" onclick="updateProfile()">Salva Modifiche</button>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <script>
-
-    const SUPABASE_URL =
-      "https://ysffeiaeuuuhfxkwtumt.supabase.co";
-
-    const SUPABASE_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
-
-    const client =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
+    const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+    
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function loadUser() {
-
-      const {
-        data: { user }
-      } = await client.auth.getUser();
+      const { data: { user } } = await client.auth.getUser();
 
       if (!user) {
-
-        window.location.href =
-          "/login";
-
+        window.location.href = "/login";
         return;
       }
 
-      document
-        .getElementById("email")
-        .innerText =
-          user.email;
+      // Mostra i dati attuali del profilo
+      document.getElementById("email").innerText = user.email;
+      
+      const currentName = user.user_metadata?.full_name || "User";
+      const currentAvatar = user.user_metadata?.avatar_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
-      document
-        .getElementById("name")
-        .innerText =
+      document.getElementById("name").innerText = currentName;
+      document.getElementById("avatar").src = currentAvatar;
 
-          user.user_metadata.full_name ||
+      // Inserisce i valori attuali dentro gli input come predefiniti
+      document.getElementById("input-name").value = currentName;
+      document.getElementById("input-avatar").value = currentAvatar;
+    }
 
-          "User";
+    // Nuova funzione per salvare le modifiche su Supabase
+    async function updateProfile() {
+      const newName = document.getElementById("input-name").value;
+      const newAvatar = document.getElementById("input-avatar").value;
 
-      document
-        .getElementById("avatar")
-        .src =
+      const { data, error } = await client.auth.updateUser({
+        data: { 
+          full_name: newName,
+          avatar_url: newAvatar
+        }
+      });
 
-          user.user_metadata.avatar_url ||
-
-          "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+      if (error) {
+        alert("Errore durante l'aggiornamento: " + error.message);
+      } else {
+        alert("Profilo aggiornato con successo!");
+        // Ricarica la UI con i nuovi dati salvati
+        loadUser();
+      }
     }
 
     async function logout() {
-
       await client.auth.signOut();
-
-      window.location.href =
-        "/login";
+      window.location.href = "/login";
     }
 
     loadUser();
-
   </script>
-
 </body>
 </html>
