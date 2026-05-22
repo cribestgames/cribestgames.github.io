@@ -25,7 +25,45 @@
       padding-top: 50px;
       -webkit-tap-highlight-color: transparent;
     }
+    
+    .profile-button {
 
+  position: fixed;
+
+  top: 20px;
+  right: 20px;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(10px);
+
+  border:
+    1px solid rgba(255,255,255,0.12);
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.profile-button img {
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+    
     .lang-switch {
       position: absolute;
       top: 15px;
