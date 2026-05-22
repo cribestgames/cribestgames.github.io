@@ -98,96 +98,94 @@
   </div>
 
   <script>
-    const SUPABASE_URL = "https://supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+  const SUPABASE_URL = "https://supabase.co";
+  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+  
+  const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let currentUser = null;
+
+  async function loadUser() {
+    const { data: { user } } = await client.auth.getUser();
+
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+
+    currentUser = user;
+
+    document.getElementById("email").innerText = user.email;
     
-    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    let currentUser = null;
+    const currentName = user.user_metadata?.full_name || "User";
+    const currentAvatar = user.user_metadata?.avatar_url || "https://flaticon.com";
 
-    async function loadUser() {
-      const { data: { user } } = await client.auth.getUser();
+    document.getElementById("name").innerText = currentName;
+    document.getElementById("avatar").src = currentAvatar;
+    document.getElementById("input-name").value = currentName;
+    document.getElementById("input-file").value = ""; 
+  }
 
-      if (!user) {
-        window.location.href = "/login";
+  async function updateProfile() {
+    const btnSave = document.getElementById("btn-save");
+    const newName = document.getElementById("input-name").value;
+    const fileInput = document.getElementById("input-file");
+    
+    // CORREZIONE: Prendiamo il primo file della lista [0]
+    const file = fileInput.files[0]; 
+    
+    let avatarUrl = currentUser.user_metadata?.avatar_url;
+
+    btnSave.disabled = true;
+    btnSave.innerText = "Salvataggio in corso...";
+
+    // Se l'utente ha selezionato un file, facciamo l'upload
+    if (file) {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
+
+      const { data: uploadData, error: uploadError } = await client.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) {
+        alert("Errore nel caricamento dell'immagine: " + uploadError.message);
+        btnSave.disabled = false;
+        btnSave.innerText = "Salva Modifiche";
         return;
       }
 
-      currentUser = user;
+      const { data: { publicUrl } } = client.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
 
-      document.getElementById("email").innerText = user.email;
-      
-      const currentName = user.user_metadata?.full_name || "User";
-      const currentAvatar = user.user_metadata?.avatar_url || "https://flaticon.com";
-
-      document.getElementById("name").innerText = currentName;
-      document.getElementById("avatar").src = currentAvatar;
-      document.getElementById("input-name").value = currentName;
-      document.getElementById("input-file").value = ""; // Resetta la selezione file
+      avatarUrl = publicUrl;
     }
 
-    async function updateProfile() {
-      const btnSave = document.getElementById("btn-save");
-      const newName = document.getElementById("input-name").value;
-      const fileInput = document.getElementById("input-file");
-      const file = fileInput.files[0];
-      
-      let avatarUrl = currentUser.user_metadata?.avatar_url;
-
-      // Disabilita il pulsante per evitare click multipli durante il caricamento
-      btnSave.disabled = true;
-      btnSave.innerText = "Salvataggio in corso...";
-
-      // 1. Se l'utente ha selezionato un file, esegui l'upload su Supabase Storage
-      if (file) {
-        const fileExt = file.name.split('.').pop();
-        // Crea un nome file unico usando l'ID utente e il timestamp per evitare duplicati
-        const fileName = `${currentUser.id}/${Date.now()}.${fileExt}`;
-
-        const { data: uploadData, error: uploadError } = await client.storage
-          .from('avatars')
-          .upload(fileName, file, { upsert: true });
-
-        if (uploadError) {
-          alert("Errore nel caricamento dell'immagine: " + uploadError.message);
-          btnSave.disabled = false;
-          btnSave.innerText = "Salva Modifiche";
-          return;
-        }
-
-        // 2. Recupera l'URL pubblico dell'immagine caricata
-        const { data: { publicUrl } } = client.storage
-          .from('avatars')
-          .getPublicUrl(fileName);
-
-        avatarUrl = publicUrl;
+    // Aggiorna i metadati dell'utente
+    const { error: authError } = await client.auth.updateUser({
+      data: { 
+        full_name: newName,
+        avatar_url: avatarUrl
       }
+    });
 
-      // 3. Aggiorna i metadati dell'utente con il nuovo nome e il nuovo URL dell'immagine
-      const { error: authError } = await client.auth.updateUser({
-        data: { 
-          full_name: newName,
-          avatar_url: avatarUrl
-        }
-      });
-
-      if (authError) {
-        alert("Errore durante l'aggiornamento del profilo: " + authError.message);
-      } else {
-        alert("Profilo aggiornato con successo!");
-        await loadUser();
-      }
-
-      // Ripristina il pulsante
-      btnSave.disabled = false;
-      btnSave.innerText = "Salva Modifiche";
+    if (authError) {
+      alert("Errore durante l'aggiornamento del profilo: " + authError.message);
+    } else {
+      alert("Profilo aggiornato con successo!");
+      await loadUser();
     }
 
-    async function logout() {
-      await client.auth.signOut();
-      window.location.href = "/login";
-    }
+    btnSave.disabled = false;
+    btnSave.innerText = "Salva Modifiche";
+  }
 
-    loadUser();
-  </script>
+  async function logout() {
+    await client.auth.signOut();
+    window.location.href = "/login";
+  }
+
+  loadUser();
+</script>
 </body>
 </html>
