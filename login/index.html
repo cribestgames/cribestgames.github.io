@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Login - CribestGames</title>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -11,6 +12,7 @@
     body {
       margin: 0;
       background: rgb(54, 18, 18);
+
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 
       display: flex;
@@ -22,82 +24,107 @@
     }
 
     .login-box {
-      background: rgba(255,255,255,0.05);
-      padding: 30px;
-      border-radius: 16px;
       width: 320px;
 
+      padding: 35px;
+
+      border-radius: 18px;
+
+      background: rgba(255,255,255,0.05);
+
       backdrop-filter: blur(10px);
-      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+
+      box-shadow:
+        0 0 30px rgba(0,0,0,0.3);
     }
 
     h1 {
+      margin: 0 0 28px 0;
       text-align: center;
-      margin-bottom: 25px;
+      font-size: 52px;
+      font-weight: 700;
     }
 
     input {
-  width: 100%;
-  padding: 12px;
-  margin-bottom: 15px;
-
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 10px;
-
-  background: rgba(255,255,255,0.12);
-
-  color: white;
-  font-size: 15px;
-
-  outline: none;
-  box-sizing: border-box;
-}
-
-input:focus {
-  border-color: rgba(255,255,255,0.35);
-}
-
-input::placeholder {
-  color: rgba(255,255,255,0.65);
-}
-
-    input::placeholder {
-      color: rgba(255,255,255,0.6);
-    }
-
-    button {
       width: 100%;
-      padding: 12px;
 
-      border: none;
-      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 16px;
 
-      background: white;
-      color: black;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
 
-      cursor: pointer;
-      font-weight: bold;
+      background: rgba(255,255,255,0.14);
+
+      color: white;
+      font-size: 15px;
+
+      outline: none;
+      box-sizing: border-box;
 
       transition: 0.2s;
     }
 
+    input:focus {
+      background: rgba(255,255,255,0.18);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.55);
+    }
+
+    button {
+      width: 100%;
+
+      padding: 13px;
+
+      border: none;
+      border-radius: 12px;
+
+      background: white;
+      color: black;
+
+      font-size: 15px;
+      font-weight: 700;
+
+      cursor: pointer;
+
+      transition: 0.2s;
+
+      margin-top: 6px;
+    }
+
     button:hover {
-      transform: scale(1.03);
+      transform: scale(1.02);
     }
 
     .status {
-      margin-top: 15px;
+      margin-top: 18px;
+
       text-align: center;
+
+      color: rgba(255,255,255,0.75);
+
       font-size: 14px;
-      color: rgba(255,255,255,0.8);
     }
 
     .back {
       display: block;
+
       text-align: center;
+
       margin-top: 20px;
-      color: rgba(255,255,255,0.6);
+
+      color: rgba(255,255,255,0.55);
+
       text-decoration: none;
+
+      font-size: 14px;
+    }
+
+    .back:hover {
+      color: white;
     }
   </style>
 </head>
@@ -107,16 +134,33 @@ input::placeholder {
 
     <h1 id="title">Login</h1>
 
-    <input type="email" id="email">
-    <input type="password" id="password">
+    <input
+      type="email"
+      id="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
 
-    <button onclick="login()" id="loginBtn"></button>
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
 
-    <button onclick="register()" id="registerBtn" style="margin-top:10px;"></button>
+    <button onclick="login()" id="loginBtn">
+      Login
+    </button>
+
+    <button onclick="register()" id="registerBtn">
+      Register
+    </button>
 
     <div class="status" id="status"></div>
 
-    <a class="back" href="/" id="backBtn"></a>
+    <a class="back" href="/" id="backBtn">
+      ← Back
+    </a>
 
   </div>
 
@@ -137,8 +181,6 @@ input::placeholder {
     const translations = {
       it: {
         title: "Login",
-        email: "Email",
-        password: "Password",
         login: "Accedi",
         register: "Registrati",
         back: "← Torna alla home",
@@ -148,8 +190,6 @@ input::placeholder {
 
       en: {
         title: "Login",
-        email: "Email",
-        password: "Password",
         login: "Login",
         register: "Register",
         back: "← Back to home",
@@ -159,8 +199,6 @@ input::placeholder {
 
       uk: {
         title: "Вхід",
-        email: "Електронна пошта",
-        password: "Пароль",
         login: "Увійти",
         register: "Реєстрація",
         back: "← Назад",
@@ -169,7 +207,7 @@ input::placeholder {
       }
     };
 
-    // SELEZIONE LINGUA
+    // LINGUA DEFAULT
     let t = translations.en;
 
     if (lang.startsWith("it")) {
@@ -180,29 +218,40 @@ input::placeholder {
     }
 
     // APPLICA TESTI
-    document.getElementById("title").innerText = t.title;
+    document.getElementById("title").innerText =
+      t.title;
 
-    document.getElementById("email").placeholder = t.email;
-    document.getElementById("password").placeholder = t.password;
+    document.getElementById("loginBtn").innerText =
+      t.login;
 
-    document.getElementById("loginBtn").innerText = t.login;
-    document.getElementById("registerBtn").innerText = t.register;
+    document.getElementById("registerBtn").innerText =
+      t.register;
 
-    document.getElementById("backBtn").innerText = t.back;
+    document.getElementById("backBtn").innerText =
+      t.back;
 
     // LOGIN
     async function login() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
 
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      const email =
+        document.getElementById('email').value;
+
+      const password =
+        document.getElementById('password').value;
+
+      const { error } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
 
       if (error) {
-        document.getElementById('status').innerText = error.message;
+
+        document.getElementById('status').innerText =
+          error.message;
+
       } else {
+
         document.getElementById('status').innerText =
           t.loginSuccess;
 
@@ -214,17 +263,26 @@ input::placeholder {
 
     // REGISTER
     async function register() {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
 
-      const { error } = await supabase.auth.signUp({
-        email,
-        password
-      });
+      const email =
+        document.getElementById('email').value;
+
+      const password =
+        document.getElementById('password').value;
+
+      const { error } =
+        await supabase.auth.signUp({
+          email,
+          password
+        });
 
       if (error) {
-        document.getElementById('status').innerText = error.message;
+
+        document.getElementById('status').innerText =
+          error.message;
+
       } else {
+
         document.getElementById('status').innerText =
           t.registerSuccess;
       }
