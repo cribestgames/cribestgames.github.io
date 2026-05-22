@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - CribestGames</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: rgb(54, 18, 18);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      height: 100vh;
+      color: white;
+    }
+
+    .login-box {
+      background: rgba(255,255,255,0.05);
+      padding: 30px;
+      border-radius: 16px;
+      width: 320px;
+
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 15px;
+
+      border: none;
+      border-radius: 10px;
+
+      background: rgba(255,255,255,0.1);
+      color: white;
+
+      box-sizing: border-box;
+    }
+
+    input::placeholder {
+      color: rgba(255,255,255,0.6);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+
+      border: none;
+      border-radius: 10px;
+
+      background: white;
+      color: black;
+
+      cursor: pointer;
+      font-weight: bold;
+
+      transition: 0.2s;
+    }
+
+    button:hover {
+      transform: scale(1.03);
+    }
+
+    .status {
+      margin-top: 15px;
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: rgba(255,255,255,0.6);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-box">
+
+    <h1 id="title">Login</h1>
+
+    <input type="email" id="email">
+    <input type="password" id="password">
+
+    <button onclick="login()" id="loginBtn"></button>
+
+    <button onclick="register()" id="registerBtn" style="margin-top:10px;"></button>
+
+    <div class="status" id="status"></div>
+
+    <a class="back" href="/" id="backBtn"></a>
+
+  </div>
+
+  <script>
+    // SUPABASE
+    const supabaseUrl = 'https://TUO-PROGETTO.supabase.co';
+    const supabaseKey = 'TUA_ANON_KEY';
+
+    const supabase = window.supabase.createClient(
+      supabaseUrl,
+      supabaseKey
+    );
+
+    // LINGUA BROWSER
+    const lang = navigator.language.toLowerCase();
+
+    // TRADUZIONI
+    const translations = {
+      it: {
+        title: "Login",
+        email: "Email",
+        password: "Password",
+        login: "Accedi",
+        register: "Registrati",
+        back: "← Torna alla home",
+        loginSuccess: "Login effettuato!",
+        registerSuccess: "Account creato!"
+      },
+
+      en: {
+        title: "Login",
+        email: "Email",
+        password: "Password",
+        login: "Login",
+        register: "Register",
+        back: "← Back to home",
+        loginSuccess: "Login successful!",
+        registerSuccess: "Account created!"
+      },
+
+      uk: {
+        title: "Вхід",
+        email: "Електронна пошта",
+        password: "Пароль",
+        login: "Увійти",
+        register: "Реєстрація",
+        back: "← Назад",
+        loginSuccess: "Успішний вхід!",
+        registerSuccess: "Акаунт створено!"
+      }
+    };
+
+    // SELEZIONE LINGUA
+    let t = translations.en;
+
+    if (lang.startsWith("it")) {
+      t = translations.it;
+    }
+    else if (lang.startsWith("uk")) {
+      t = translations.uk;
+    }
+
+    // APPLICA TESTI
+    document.getElementById("title").innerText = t.title;
+
+    document.getElementById("email").placeholder = t.email;
+    document.getElementById("password").placeholder = t.password;
+
+    document.getElementById("loginBtn").innerText = t.login;
+    document.getElementById("registerBtn").innerText = t.register;
+
+    document.getElementById("backBtn").innerText = t.back;
+
+    // LOGIN
+    async function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) {
+        document.getElementById('status').innerText = error.message;
+      } else {
+        document.getElementById('status').innerText =
+          t.loginSuccess;
+
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 1000);
+      }
+    }
+
+    // REGISTER
+    async function register() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password
+      });
+
+      if (error) {
+        document.getElementById('status').innerText = error.message;
+      } else {
+        document.getElementById('status').innerText =
+          t.registerSuccess;
+      }
+    }
+  </script>
+
+</body>
+</html>
