@@ -25,6 +25,45 @@
       padding-top: 50px;
       -webkit-tap-highlight-color: transparent;
     }
+
+    .profile-button {
+
+  position: fixed;
+
+  top: 20px;
+  right: 20px;
+
+  width: 52px;
+  height: 52px;
+
+  border-radius: 50%;
+
+  overflow: hidden;
+
+  background:
+    rgba(255,255,255,0.12);
+
+  backdrop-filter: blur(10px);
+
+  border:
+    1px solid rgba(255,255,255,0.12);
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  z-index: 999;
+}
+
+.profile-button img {
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+    
     .games-container {
       display: flex;
       gap: 40px;
@@ -108,6 +147,72 @@
 
   <div class="license">Copyright © 2025-2026 cribest7890</div>
 
+<a id="profileLink" class="profile-button">
+
+  <img
+    id="profileImage"
+    src="https://cdn-icons-png.flaticon.com/512/847/847969.png"
+  >
+
+</a>
+  
+  
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+  const SUPABASE_URL =
+    "https://ysffeiaeuuuhfxkwtumt.supabase.co";
+
+  const SUPABASE_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+
+  const client =
+    window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+  async function loadProfile() {
+
+    const {
+      data: { user }
+    } = await client.auth.getUser();
+
+    const image =
+      document.getElementById(
+        "profileImage"
+      );
+
+    const link =
+      document.getElementById(
+        "profileLink"
+      );
+
+    if (!user) {
+
+      image.src =
+        "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+
+      link.href = "/login";
+
+      return;
+    }
+
+    image.src =
+
+      user.user_metadata.avatar_url ||
+
+      "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+
+    link.href = "/profile";
+  }
+
+  loadProfile();
+
+</script>
+  
 </html>
 
