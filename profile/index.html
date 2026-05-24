@@ -156,6 +156,57 @@
 
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    // ── i18n ──────────────────────────────────────────────
+    const translations = {
+      it: {
+        changePhoto:    "Cambia foto",
+        previewBadge:   "⚠️ Anteprima — salva per confermare",
+        labelName:      "Nuovo Nome",
+        placeholderName:"Inserisci nome",
+        btnSave:        "Salva Modifiche",
+        btnLogout:      "Esci",
+        alertError:     "Errore durante l'aggiornamento: ",
+        alertSuccess:   "Profilo aggiornato con successo!",
+      },
+      en: {
+        changePhoto:    "Change photo",
+        previewBadge:   "⚠️ Preview — save to confirm",
+        labelName:      "New Name",
+        placeholderName:"Enter name",
+        btnSave:        "Save Changes",
+        btnLogout:      "Logout",
+        alertError:     "Update error: ",
+        alertSuccess:   "Profile updated successfully!",
+      },
+      uk: {
+        changePhoto:    "Змінити фото",
+        previewBadge:   "⚠️ Попередній перегляд — збережіть для підтвердження",
+        labelName:      "Нове ім'я",
+        placeholderName:"Введіть ім'я",
+        btnSave:        "Зберегти зміни",
+        btnLogout:      "Вийти",
+        alertError:     "Помилка оновлення: ",
+        alertSuccess:   "Профіль успішно оновлено!",
+      },
+    };
+
+    function getLang() {
+      const lang = (navigator.language || "en").toLowerCase().slice(0, 2);
+      return translations[lang] ? lang : "en";
+    }
+
+    const t = translations[getLang()];
+
+    function applyTranslations() {
+      document.getElementById("overlay-label").textContent    = t.changePhoto;
+      document.getElementById("preview-badge").textContent    = t.previewBadge;
+      document.getElementById("label-name").textContent       = t.labelName;
+      document.getElementById("input-name").placeholder       = t.placeholderName;
+      document.getElementById("btn-save").textContent         = t.btnSave;
+      document.getElementById("btn-logout").textContent       = t.btnLogout;
+    }
+    // ─────────────────────────────────────────────────────
+
     // Base64 dell'immagine scelta dall'utente (null = nessuna modifica)
     let newAvatarBase64 = null;
 
