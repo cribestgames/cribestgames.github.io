@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,8 +24,6 @@
       backdrop-filter: blur(10px);
       text-align: center;
     }
-
-    /* Avatar cliccabile */
     .avatar-wrapper {
       position: relative;
       width: 100px;
@@ -33,9 +31,7 @@
       margin: 0 auto 18px;
       cursor: pointer;
     }
-    .avatar-wrapper:hover .avatar-overlay {
-      opacity: 1;
-    }
+    .avatar-wrapper:hover .avatar-overlay { opacity: 1; }
     .avatar {
       width: 100px;
       height: 100px;
@@ -58,37 +54,17 @@
       flex-direction: column;
       gap: 4px;
     }
-    .avatar-overlay svg {
-      width: 22px;
-      height: 22px;
-    }
-
-    /* Input file nascosto */
-    #file-input {
-      display: none;
-    }
-
-    /* Badge anteprima */
+    .avatar-overlay svg { width: 22px; height: 22px; }
+    #file-input { display: none; }
     .preview-badge {
       font-size: 11px;
       color: #aaa;
       margin-bottom: 12px;
       display: none;
     }
-    .preview-badge.visible {
-      display: block;
-    }
-
-    .edit-inputs {
-      margin-top: 20px;
-      text-align: left;
-    }
-    label {
-      font-size: 12px;
-      color: #ccc;
-      display: block;
-      margin-bottom: 5px;
-    }
+    .preview-badge.visible { display: block; }
+    .edit-inputs { margin-top: 20px; text-align: left; }
+    label { font-size: 12px; color: #ccc; display: block; margin-bottom: 5px; }
     input[type="text"] {
       width: 100%;
       padding: 10px;
@@ -110,17 +86,17 @@
       margin-top: 10px;
       cursor: pointer;
     }
-    .btn-save {
-      background: #4CAF50;
-      color: white;
+    .btn-save { background: #4CAF50; color: white; }
+    .debug {
+      font-size: 10px;
+      color: #888;
+      margin-bottom: 8px;
     }
   </style>
 </head>
 <body>
-
   <div class="profile-box">
 
-    <!-- Avatar cliccabile per cambiare immagine -->
     <div class="avatar-wrapper" onclick="document.getElementById('file-input').click()">
       <img id="avatar" class="avatar" src="">
       <div class="avatar-overlay">
@@ -128,35 +104,31 @@
           <path stroke-linecap="round" stroke-linejoin="round"
             d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
         </svg>
-        Cambia foto
+        <span id="overlay-label"></span>
       </div>
     </div>
 
-    <!-- Input file nascosto -->
     <input type="file" id="file-input" accept=".png,.jpg,.jpeg" onchange="previewImage(event)">
+    <p class="preview-badge" id="preview-badge"></p>
 
-    <!-- Badge che appare quando si sceglie una nuova immagine -->
-    <p class="preview-badge" id="preview-badge">⚠️ Anteprima — salva per confermare</p>
-
-    <h1 id="name">User</h1>
+<h1 id="name">User</h1>
     <p id="email"></p>
 
     <div class="edit-inputs">
-      <label for="input-name">Nuovo Nome</label>
-      <input type="text" id="input-name" placeholder="Inserisci nome">
+      <label id="label-name" for="input-name"></label>
+      <input type="text" id="input-name">
     </div>
 
-    <button class="btn-save" onclick="updateProfile()">Salva Modifiche</button>
-    <button onclick="logout()">Logout</button>
+    <button id="btn-save" class="btn-save" onclick="updateProfile()"></button>
+    <button id="btn-logout" onclick="logout()"></button>
   </div>
 
   <script>
     const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
-
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // ── i18n ──────────────────────────────────────────────
+    // ── i18n ─────────────────────────────────────────────
     const translations = {
       it: {
         changePhoto:    "Cambia foto",
@@ -190,58 +162,46 @@
       },
     };
 
-    function getLang() {
-      const lang = (navigator.language || "en").toLowerCase().slice(0, 2);
-      return translations[lang] ? lang : "en";
-    }
-
-    const t = translations[getLang()];
+    // Stessa logica della pagina che funziona
+    var _nav = navigator.language || navigator.userLanguage || 'en';
+    var lang = _nav.startsWith('it') ? 'it' : _nav.startsWith('uk') ? 'uk' : 'en';
+    const t = translations[lang];
 
     function applyTranslations() {
-      document.getElementById("overlay-label").textContent    = t.changePhoto;
-      document.getElementById("preview-badge").textContent    = t.previewBadge;
-      document.getElementById("label-name").textContent       = t.labelName;
-      document.getElementById("input-name").placeholder       = t.placeholderName;
-      document.getElementById("btn-save").textContent         = t.btnSave;
-      document.getElementById("btn-logout").textContent       = t.btnLogout;
+      document.getElementById("overlay-label").textContent = t.changePhoto;
+      document.getElementById("preview-badge").textContent = t.previewBadge;
+      document.getElementById("label-name").textContent    = t.labelName;
+      document.getElementById("input-name").placeholder    = t.placeholderName;
+      document.getElementById("btn-save").textContent      = t.btnSave;
+      document.getElementById("btn-logout").textContent    = t.btnLogout;
     }
-    // ─────────────────────────────────────────────────────
 
-    // Base64 dell'immagine scelta dall'utente (null = nessuna modifica)
     let newAvatarBase64 = null;
 
     async function loadUser() {
       const { data: { user } } = await client.auth.getUser();
+      if (!user) { window.location.href = "/login"; return; }
 
-      if (!user) {
-        window.location.href = "/login";
-        return;
-      }
-
-      document.getElementById("email").innerText = user.email;
-
-      const currentName = user.user_metadata?.full_name || "User";
+      document.getElementById("email").innerText   = user.email;
+      const currentName   = user.user_metadata?.full_name || "User";
       const currentAvatar = user.user_metadata?.avatar_url ||
         "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
-      document.getElementById("name").innerText = currentName;
-      document.getElementById("avatar").src = currentAvatar;
+      document.getElementById("name").innerText   = currentName;
+      document.getElementById("avatar").src       = currentAvatar;
       document.getElementById("input-name").value = currentName;
 
-      // Reset selezione immagine
       newAvatarBase64 = null;
       document.getElementById("preview-badge").classList.remove("visible");
       document.getElementById("file-input").value = "";
     }
 
-    // Anteprima immediata appena si sceglie il file
     function previewImage(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
-        newAvatarBase64 = e.target.result; // data:image/png;base64,...
+        newAvatarBase64 = e.target.result;
         document.getElementById("avatar").src = newAvatarBase64;
         document.getElementById("preview-badge").classList.add("visible");
       };
@@ -250,19 +210,14 @@
 
     async function updateProfile() {
       const newName = document.getElementById("input-name").value;
-
-      // Usa il base64 se l'utente ha scelto un file, altrimenti lascia invariato
       const updateData = { full_name: newName };
-      if (newAvatarBase64) {
-        updateData.avatar_url = newAvatarBase64;
-      }
+      if (newAvatarBase64) updateData.avatar_url = newAvatarBase64;
 
-      const { data, error } = await client.auth.updateUser({ data: updateData });
-
+      const { error } = await client.auth.updateUser({ data: updateData });
       if (error) {
-        alert("Errore durante l'aggiornamento: " + error.message);
+        alert(t.alertError + error.message);
       } else {
-        alert("Profilo aggiornato con successo!");
+        alert(t.alertSuccess);
         loadUser();
       }
     }
@@ -272,6 +227,7 @@
       window.location.href = "/login";
     }
 
+    applyTranslations();
     loadUser();
   </script>
 </body>
