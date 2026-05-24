@@ -24,13 +24,61 @@
       backdrop-filter: blur(10px);
       text-align: center;
     }
+
+    /* Avatar cliccabile */
+    .avatar-wrapper {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 18px;
+      cursor: pointer;
+    }
+    .avatar-wrapper:hover .avatar-overlay {
+      opacity: 1;
+    }
     .avatar {
       width: 100px;
       height: 100px;
       border-radius: 50%;
       object-fit: cover;
-      margin-bottom: 18px;
+      display: block;
     }
+    .avatar-overlay {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      font-size: 12px;
+      color: white;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .avatar-overlay svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    /* Input file nascosto */
+    #file-input {
+      display: none;
+    }
+
+    /* Badge anteprima */
+    .preview-badge {
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .preview-badge.visible {
+      display: block;
+    }
+
     .edit-inputs {
       margin-top: 20px;
       text-align: left;
@@ -41,7 +89,7 @@
       display: block;
       margin-bottom: 5px;
     }
-    input {
+    input[type="text"] {
       width: 100%;
       padding: 10px;
       margin-bottom: 15px;
@@ -71,17 +119,31 @@
 <body>
 
   <div class="profile-box">
-    <img id="avatar" class="avatar">
+
+    <!-- Avatar cliccabile per cambiare immagine -->
+    <div class="avatar-wrapper" onclick="document.getElementById('file-input').click()">
+      <img id="avatar" class="avatar" src="">
+      <div class="avatar-overlay">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        Cambia foto
+      </div>
+    </div>
+
+    <!-- Input file nascosto -->
+    <input type="file" id="file-input" accept=".png,.jpg,.jpeg" onchange="previewImage(event)">
+
+    <!-- Badge che appare quando si sceglie una nuova immagine -->
+    <p class="preview-badge" id="preview-badge">⚠️ Anteprima — salva per confermare</p>
+
     <h1 id="name">User</h1>
     <p id="email"></p>
 
-    <!-- Nuovi campi di input per la modifica -->
     <div class="edit-inputs">
       <label for="input-name">Nuovo Nome</label>
       <input type="text" id="input-name" placeholder="Inserisci nome">
-
-      <label for="input-avatar">URL Nuova Immagine</label>
-      <input type="text" id="input-avatar" placeholder="https://link-immagine.com">
     </div>
 
     <button class="btn-save" onclick="updateProfile()">Salva Modifiche</button>
@@ -91,8 +153,11 @@
   <script>
     const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
-    
+
     const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // Base64 dell'immagine scelta dall'utente (null = nessuna modifica)
+    let newAvatarBase64 = null;
 
     async function loadUser() {
       const { data: { user } } = await client.auth.getUser();
@@ -102,37 +167,51 @@
         return;
       }
 
-      // Mostra i dati attuali del profilo
       document.getElementById("email").innerText = user.email;
-      
+
       const currentName = user.user_metadata?.full_name || "User";
-      const currentAvatar = user.user_metadata?.avatar_url || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
+      const currentAvatar = user.user_metadata?.avatar_url ||
+        "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
 
       document.getElementById("name").innerText = currentName;
       document.getElementById("avatar").src = currentAvatar;
-
-      // Inserisce i valori attuali dentro gli input come predefiniti
       document.getElementById("input-name").value = currentName;
-      document.getElementById("input-avatar").value = currentAvatar;
+
+      // Reset selezione immagine
+      newAvatarBase64 = null;
+      document.getElementById("preview-badge").classList.remove("visible");
+      document.getElementById("file-input").value = "";
     }
 
-    // Nuova funzione per salvare le modifiche su Supabase
+    // Anteprima immediata appena si sceglie il file
+    function previewImage(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        newAvatarBase64 = e.target.result; // data:image/png;base64,...
+        document.getElementById("avatar").src = newAvatarBase64;
+        document.getElementById("preview-badge").classList.add("visible");
+      };
+      reader.readAsDataURL(file);
+    }
+
     async function updateProfile() {
       const newName = document.getElementById("input-name").value;
-      const newAvatar = document.getElementById("input-avatar").value;
 
-      const { data, error } = await client.auth.updateUser({
-        data: { 
-          full_name: newName,
-          avatar_url: newAvatar
-        }
-      });
+      // Usa il base64 se l'utente ha scelto un file, altrimenti lascia invariato
+      const updateData = { full_name: newName };
+      if (newAvatarBase64) {
+        updateData.avatar_url = newAvatarBase64;
+      }
+
+      const { data, error } = await client.auth.updateUser({ data: updateData });
 
       if (error) {
         alert("Errore durante l'aggiornamento: " + error.message);
       } else {
         alert("Profilo aggiornato con successo!");
-        // Ricarica la UI con i nuovi dati salvati
         loadUser();
       }
     }
