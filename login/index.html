@@ -1,454 +1,166 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - CribestGames</title>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-
     body {
-
       margin: 0;
-
       background: rgb(54, 18, 18);
-
-      font-family:
-        'Segoe UI',
-        Tahoma,
-        Geneva,
-        Verdana,
-        sans-serif;
-
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       justify-content: center;
       align-items: center;
-
       height: 100vh;
-
       color: white;
     }
-
     .login-box {
-
       width: 340px;
-
       padding: 35px;
-
       border-radius: 20px;
-
-      background:
-        rgba(255,255,255,0.05);
-
+      background: rgba(255,255,255,0.05);
       backdrop-filter: blur(10px);
-
-      box-shadow:
-        0 0 30px rgba(0,0,0,0.3);
+      box-shadow: 0 0 30px rgba(0,0,0,0.3);
     }
-
-    h1 {
-
-      margin: 0;
-
-      text-align: center;
-
-      font-size: 42px;
-      font-weight: 700;
-    }
-
-    .subtitle {
-
-      margin-top: 5px;
-      margin-bottom: 28px;
-
-      text-align: center;
-
-      color:
-        rgba(255,255,255,0.65);
-    }
-
+    h1 { margin: 0; text-align: center; font-size: 42px; font-weight: 700; }
+    .subtitle { margin-top: 5px; margin-bottom: 28px; text-align: center; color: rgba(255,255,255,0.65); }
     input {
-
-      width: 100%;
-
-      padding: 14px;
-
-      margin-bottom: 16px;
-
-      border:
-        1px solid rgba(255,255,255,0.12);
-
-      border-radius: 12px;
-
-      background:
-        rgba(255,255,255,0.12);
-
-      color: white;
-
-      font-size: 15px;
-
-      outline: none;
-
-      box-sizing: border-box;
+      width: 100%; padding: 14px; margin-bottom: 16px;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 12px;
+      background: rgba(255,255,255,0.12); color: white; font-size: 15px;
+      outline: none; box-sizing: border-box;
     }
-
-    input::placeholder {
-
-      color:
-        rgba(255,255,255,0.55);
-    }
-
+    input::placeholder { color: rgba(255,255,255,0.55); }
     button {
-
-      width: 100%;
-
-      padding: 13px;
-
-      border: none;
-
-      border-radius: 12px;
-
-      font-size: 15px;
-
-      font-weight: bold;
-
-      cursor: pointer;
-
-      margin-top: 8px;
+      width: 100%; padding: 13px; border: none; border-radius: 12px;
+      font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 8px;
     }
-
-    .login-btn {
-
-      background: white;
-      color: black;
-    }
-
-    .register-btn {
-
-      background:
-        rgba(255,255,255,0.12);
-
-      color: white;
-    }
-
-    .divider {
-
-      margin: 18px 0;
-
-      text-align: center;
-
-      color:
-        rgba(255,255,255,0.45);
-    }
-
-    .status {
-
-      margin-top: 18px;
-
-      text-align: center;
-
-      color:
-        rgba(255,255,255,0.8);
-
-      min-height: 20px;
-    }
-
-    .back {
-
-      display: block;
-
-      text-align: center;
-
-      margin-top: 20px;
-
-      color:
-        rgba(255,255,255,0.6);
-
-      text-decoration: none;
-    }
-
+    .login-btn { background: white; color: black; }
+    .register-btn { background: rgba(255,255,255,0.12); color: white; }
+    .divider { margin: 18px 0; text-align: center; color: rgba(255,255,255,0.45); }
+    .status { margin-top: 18px; text-align: center; color: rgba(255,255,255,0.8); min-height: 20px; }
+    .back { display: block; text-align: center; margin-top: 20px; color: rgba(255,255,255,0.6); text-decoration: none; }
     .gsi-material-button {
-
-      background: white;
-
-      border: 1px solid #747775;
-
-      border-radius: 20px;
-
-      cursor: pointer;
-
-      height: 44px;
-
-      width: 100%;
-
-      margin-top: 12px;
-
-      position: relative;
-
-      overflow: hidden;
+      background: white; border: 1px solid #747775; border-radius: 20px;
+      cursor: pointer; height: 44px; width: 100%; margin-top: 12px;
+      position: relative; overflow: hidden;
     }
-
-    .gsi-material-button-content-wrapper {
-
-      display: flex;
-
-      align-items: center;
-
-      justify-content: center;
-
-      height: 100%;
-    }
-
-    .gsi-material-button-icon {
-
-      width: 20px;
-      height: 20px;
-
-      margin-right: 12px;
-    }
-
-    .gsi-material-button-contents {
-
-      font-family:
-        Roboto,
-        sans-serif;
-
-      font-weight: 500;
-
-      color: #1f1f1f;
-    }
-
+    .gsi-material-button-content-wrapper { display: flex; align-items: center; justify-content: center; height: 100%; }
+    .gsi-material-button-icon { width: 20px; height: 20px; margin-right: 12px; }
+    .gsi-material-button-contents { font-family: Roboto, sans-serif; font-weight: 500; color: #1f1f1f; }
   </style>
-
 </head>
 <body>
-
   <div class="login-box">
+    <h1>CribestGames</h1>
+    <p class="subtitle" id="subtitle"></p>
 
-    <h1>
-      CribestGames
-    </h1>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" id="password-placeholder">
 
-    <p class="subtitle">
-      Login
-    </p>
+    <button class="login-btn" id="loginBtn"></button>
+    <button class="register-btn" id="registerBtn"></button>
 
-    <input
-      type="email"
-      id="email"
-      placeholder="Email"
-    >
+    <div class="divider">OR</div>
 
-    <input
-      type="password"
-      id="password"
-      placeholder="Password"
-    >
-
-    <button
-      class="login-btn"
-      id="loginBtn"
-    >
-      Login
-    </button>
-
-    <button
-      class="register-btn"
-      id="registerBtn"
-    >
-      Register
-    </button>
-
-    <div class="divider">
-      OR
-    </div>
-
-    <button
-      class="gsi-material-button"
-      id="googleBtn"
-    >
-
-      <div
-        class="gsi-material-button-content-wrapper"
-      >
-
-        <div
-          class="gsi-material-button-icon"
-        >
-
-          <svg
-            version="1.1"
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 48 48"
-            style="display:block;"
-          >
-
-            <path
-              fill="#EA4335"
-              d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-            ></path>
-
-            <path
-              fill="#4285F4"
-              d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-            ></path>
-
-            <path
-              fill="#FBBC05"
-              d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
-            ></path>
-
-            <path
-              fill="#34A853"
-              d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-            ></path>
-
+    <button class="gsi-material-button" id="googleBtn">
+      <div class="gsi-material-button-content-wrapper">
+        <div class="gsi-material-button-icon">
+          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" style="display:block;">
+            <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+            <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+            <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+            <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
           </svg>
-
         </div>
-
-        <span
-          class="gsi-material-button-contents"
-        >
-          Continue with Google
-        </span>
-
+        <span class="gsi-material-button-contents" id="googleLabel"></span>
       </div>
-
     </button>
 
-    <div
-      class="status"
-      id="status"
-    ></div>
-
-    <a
-      class="back"
-      href="/"
-    >
-      ← Back
-    </a>
-
+    <div class="status" id="status"></div>
+    <a class="back" href="/" id="backLink"></a>
   </div>
 
   <script>
+    const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+    const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const SUPABASE_URL =
-      "https://ysffeiaeuuuhfxkwtumt.supabase.co";
+    // ── i18n ─────────────────────────────────────────────
+    const translations = {
+      it: {
+        subtitle:    "Accedi",
+        placeholderPassword: "Password",
+        btnLogin:    "Accedi",
+        btnRegister: "Registrati",
+        btnGoogle:   "Continua con Google",
+        back:        "← Indietro",
+        msgCreated:  "Account creato!",
+      },
+      en: {
+        subtitle:    "Login",
+        placeholderPassword: "Password",
+        btnLogin:    "Login",
+        btnRegister: "Register",
+        btnGoogle:   "Continue with Google",
+        back:        "← Back",
+        msgCreated:  "Account created!",
+      },
+      uk: {
+        subtitle:    "Увійти",
+        placeholderPassword: "Пароль",
+        btnLogin:    "Увійти",
+        btnRegister: "Зареєструватися",
+        btnGoogle:   "Продовжити з Google",
+        back:        "← Назад",
+        msgCreated:  "Акаунт створено!",
+      },
+    };
 
-    const SUPABASE_KEY =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg";
+    var _nav = navigator.language || navigator.userLanguage || 'en';
+    var _lang = _nav.startsWith('it') ? 'it' : _nav.startsWith('uk') ? 'uk' : 'en';
+    var t = translations[_lang];
 
-    const client =
-      window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-      );
+    document.getElementById("subtitle").textContent          = t.subtitle;
+    document.getElementById("password").placeholder          = t.placeholderPassword;
+    document.getElementById("loginBtn").textContent          = t.btnLogin;
+    document.getElementById("registerBtn").textContent       = t.btnRegister;
+    document.getElementById("googleLabel").textContent       = t.btnGoogle;
+    document.getElementById("backLink").textContent          = t.back;
+    // ─────────────────────────────────────────────────────
 
     function setStatus(text) {
-
-      document
-        .getElementById("status")
-        .innerText = text;
+      document.getElementById("status").innerText = text;
     }
 
     async function login() {
-
-      const email =
-        document
-          .getElementById("email")
-          .value;
-
-      const password =
-        document
-          .getElementById("password")
-          .value;
-
-      const { error } =
-        await client.auth
-          .signInWithPassword({
-
-            email,
-            password
-          });
-
-      if (error) {
-
-        setStatus(error.message);
-
-        return;
-      }
-
+      const email    = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) { setStatus(error.message); return; }
       window.location.href = "/";
     }
 
     async function register() {
-
-      const email =
-        document
-          .getElementById("email")
-          .value;
-
-      const password =
-        document
-          .getElementById("password")
-          .value;
-
-      const { error } =
-        await client.auth.signUp({
-
-          email,
-          password
-        });
-
-      if (error) {
-
-        setStatus(error.message);
-
-        return;
-      }
-
-      setStatus(
-        "Account created!"
-      );
+      const email    = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const { error } = await client.auth.signUp({ email, password });
+      if (error) { setStatus(error.message); return; }
+      setStatus(t.msgCreated);
     }
 
     async function googleLogin() {
-
-      await client.auth
-        .signInWithOAuth({
-
-          provider: "google",
-
-          options: {
-
-            redirectTo:
-              "https://cribestgames.github.io"
-          }
-        });
+      await client.auth.signInWithOAuth({
+        provider: "google",
+        options: { redirectTo: "https://cribestgames.github.io" }
+      });
     }
 
-    document
-      .getElementById("loginBtn")
-      .onclick = login;
-
-    document
-      .getElementById("registerBtn")
-      .onclick = register;
-
-    document
-      .getElementById("googleBtn")
-      .onclick = googleLogin;
-
+    document.getElementById("loginBtn").onclick    = login;
+    document.getElementById("registerBtn").onclick = register;
+    document.getElementById("googleBtn").onclick   = googleLogin;
   </script>
-
 </body>
 </html>
