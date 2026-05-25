@@ -2,10 +2,11 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Achievements</title>
 
   <style>
+
     body {
       margin: 0;
       padding: 30px;
@@ -22,6 +23,7 @@
       margin-top: 35px;
       margin-bottom: 15px;
       font-size: 24px;
+      text-transform: capitalize;
     }
 
     .achievements-grid {
@@ -67,6 +69,7 @@
       color: #ddd;
       font-size: 14px;
     }
+
   </style>
 </head>
 <body>
@@ -78,79 +81,277 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const supabaseUrl = 'https://ysffeiaeuuuhfxkwtumt.supabase.co/';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg';
 
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    // SUPABASE
+
+    const supabaseUrl =
+      'https://YOUR_PROJECT.supabase.co';
+
+    const supabaseKey =
+      'YOUR_ANON_KEY';
+
+    const supabase =
+      window.supabase.createClient(
+        supabaseUrl,
+        supabaseKey
+      );
+
+
+
+    // LOAD ACHIEVEMENTS
+
     async function loadAchievements() {
-      const response = await fetch('/achievements/achievements.json');
-      const data = await response.json();
 
-      const container = document.getElementById('achievements-container');
+      try {
 
-      // achievements sbloccati salvati nel localStorage
-      // esempio:
-      // {
-      //   "ball-clicker": ["achievement-1"]
-      // }
-      // prende gli achievement sbloccati da Supabase
-      const { data: unlockedData } = await supabase
-        .from('unlocked_achievements')
-        .select('*');
+        // prende achievements.json
 
-      const unlocked = {};
+        const response =
+          await fetch('./achievements.json');
 
-      unlockedData?.forEach(row => {
-        if (!unlocked[row.game]) {
-          unlocked[row.game] = [];
-        }
+        const data =
+          await response.json();
 
-        unlocked[row.game].push(row.achievement);
-      });
+        const container =
+          document.getElementById(
+            'achievements-container'
+          );
 
-      for (const gameId in data.game) {
-        const gameAchievements = data.game[gameId];
 
-        const title = document.createElement('h2');
-        title.className = 'game-title';
-        title.textContent = gameId;
-        container.appendChild(title);
 
-        const grid = document.createElement('div');
-        grid.className = 'achievements-grid';
+        // prende sessione utente
 
-        for (const achievementId in gameAchievements) {
-          const achievement = gameAchievements[achievementId];
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
 
-          const isUnlocked = unlocked[gameId]?.includes(achievementId);
 
-          const card = document.createElement('div');
-          card.className = `achievement ${isUnlocked ? 'unlocked' : 'locked'}`;
 
-          card.innerHTML = `
-            <div class="achievement-header">
-              <div class="achievement-icon">
-                ${isUnlocked ? '🏆' : '🔒'}
-              </div>
+        // non loggato
 
-              <div class="achievement-name">
-                ${achievement.name}
-              </div>
-            </div>
+        if (!session) {
 
-            <div class="achievement-description">
-              ${achievement.description}
-            </div>
+          container.innerHTML = `
+            <p>Devi essere loggato.</p>
           `;
 
-          grid.appendChild(card);
+          return;
         }
 
-        container.appendChild(grid);
+
+
+        const USER_ID =
+          session.user.id;
+
+
+
+        // prende achievement sbloccati
+
+        const {
+          data: unlockedData,
+          error
+        } = await supabase
+          .from('unlocked_achievements')
+          .select('*')
+          .eq('user_id', USER_ID);
+
+
+
+        if (error) {
+          console.error(error);
+        }
+
+
+
+        // organizza dati
+
+        const unlocked = {};
+
+        unlockedData?.forEach(row => {
+
+          if (!unlocked[row.game]) {
+            unlocked[row.game] = [];
+          }
+
+          unlocked[row.game]
+            .push(row.achievement);
+
+        });
+
+
+
+        // render giochi
+
+        for (const gameId in data.game) {
+
+          const gameAchievements =
+            data.game[gameId];
+
+
+
+          // titolo gioco
+
+          const title =
+            document.createElement('h2');
+
+          title.className = 'game-title';
+
+          title.textContent =
+            gameId.replaceAll('-', ' ');
+
+          container.appendChild(title);
+
+
+
+          // grid
+
+          const grid =
+            document.createElement('div');
+
+          grid.className =
+            'achievements-grid';
+
+
+
+          // achievements
+
+          for (const achievementId in gameAchievements) {
+
+            const achievement =
+              gameAchievements[achievementId];
+
+
+
+            const isUnlocked =
+              unlocked[gameId]?.includes(
+                achievementId
+              );
+
+
+
+            const card =
+              document.createElement('div');
+
+            card.className =
+              `achievement ${
+                isUnlocked
+                  ? 'unlocked'
+                  : 'locked'
+              }`;
+
+
+
+            card.innerHTML = `
+
+              <div class="achievement-header">
+
+                <div class="achievement-icon">
+                  ${isUnlocked ? '🏆' : '🔒'}
+                </div>
+
+                <div class="achievement-name">
+                  ${achievement.name}
+                </div>
+
+              </div>
+
+              <div class="achievement-description">
+                ${achievement.description}
+              </div>
+
+            `;
+
+            grid.appendChild(card);
+
+          }
+
+
+
+          container.appendChild(grid);
+
+        }
+
       }
+
+      catch (err) {
+
+        console.error(err);
+
+      }
+
     }
 
+
+
+    // UNLOCK ACHIEVEMENT
+
+    async function unlockAchievement(
+      game,
+      achievement
+    ) {
+
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+
+
+      if (!session) return;
+
+
+
+      const userId =
+        session.user.id;
+
+
+
+      // controlla se già esiste
+
+      const {
+        data: existing
+      } = await supabase
+        .from('unlocked_achievements')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('game', game)
+        .eq('achievement', achievement)
+        .single();
+
+
+
+      if (existing) return;
+
+
+
+      // salva
+
+      await supabase
+        .from('unlocked_achievements')
+        .insert({
+
+          user_id: userId,
+
+          game: game,
+
+          achievement: achievement
+
+        });
+
+
+
+      // refresh pagina
+
+      location.reload();
+
+    }
+
+
+
+    // START
+
     loadAchievements();
+
   </script>
+
 </body>
 </html>
