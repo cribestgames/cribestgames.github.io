@@ -93,6 +93,7 @@
       let firstClickUnlocked = false;
       let keepGoingUnlocked = false;
       let itResettedUnlocked = false;
+      let youLikeItUnlocked = false;
 
       // Aggiorna i contatori iniziali
       contatore.innerText = "click: " + clickCount.toFixed(1);
@@ -167,6 +168,20 @@ if (
   unlockAchievement(
     'ball-clicker',
     'it-resetted'
+  );
+
+}
+
+if (
+  absresetCount >= 1 &&
+  !youLikeItUnlocked
+) {
+
+  youLikeItUnlocked = true;
+
+  unlockAchievement(
+    'ball-clicker',
+    'you-like-it'
   );
 
 }
