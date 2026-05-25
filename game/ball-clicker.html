@@ -90,6 +90,8 @@
       let pallinaSize = parseFloat(localStorage.getItem('pallinaSize')) || 50;
       let clickMultiplier = parseFloat(localStorage.getItem('clickMultiplier')) || 1;
       const maxSize = Math.min(window.innerWidth, window.innerHeight);
+      let firstClickUnlocked = false;
+      let keepGoingUnlocked = false;
 
       // Aggiorna i contatori iniziali
       contatore.innerText = "click: " + clickCount.toFixed(1);
@@ -124,7 +126,12 @@
           absreset.style.opacity = 1;
         }
 
-          if (clickCount > 0) {
+          if (
+  clickCount >= 1 &&
+  !firstClickUnlocked
+) {
+
+  firstClickUnlocked = true;
 
   unlockAchievement(
     'ball-clicker',
@@ -133,7 +140,14 @@
 
 }
 
-if (clickCount >= 100) {
+
+
+if (
+  clickCount >= 100 &&
+  !keepGoingUnlocked
+) {
+
+  keepGoingUnlocked = true;
 
   unlockAchievement(
     'ball-clicker',
