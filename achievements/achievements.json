@@ -1,0 +1,21 @@
+{
+  "game": {
+    "ball-clicker": {
+      "first-click": {
+        "name": "First Click!",
+        "description": "Click for the first time"
+      },
+      "keep-going": {
+        "name": "100 Clicks",
+        "description": "Get 100 clicks"
+      }
+    },
+
+    "tower-ability": {
+      "first-time": {
+        "name": "First time!",
+        "description": "Run the game"
+      }
+    }
+  }
+}
