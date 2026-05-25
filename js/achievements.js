@@ -40,7 +40,7 @@ async function(game, achievement) {
     .eq('user_id', userId)
     .eq('game', game)
     .eq('achievement', achievement)
-    .maybeSingle()
+    .maybeSingle();
 
 
 
