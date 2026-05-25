@@ -82,29 +82,32 @@
 
   <script>
 
-    // SUPABASE
+    // CREA CLIENT SUPABASE
+    // NOME DIVERSO -> niente conflitti
 
-    const supabaseUrl =
-      'https://ysffeiaeuuuhfxkwtumt.supabase.co/';
+    const achievementsSupabase =
+      window.supabase.createClient(
+        'https://ysffeiaeuuuhfxkwtumt.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg'
+      );
 
-    const supabaseKey =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg';
 
 
-
-    // LOAD ACHIEVEMENTS
+    // CARICA ACHIEVEMENTS
 
     async function loadAchievements() {
 
       try {
 
-        // prende achievements.json
+        // JSON
 
         const response =
           await fetch('./achievements.json');
 
         const data =
           await response.json();
+
+
 
         const container =
           document.getElementById(
@@ -113,15 +116,17 @@
 
 
 
-        // prende sessione utente
+        // SESSIONE
 
         const {
           data: { session }
-        } = await supabase.auth.getSession();
+        } = await achievementsSupabase
+          .auth
+          .getSession();
 
 
 
-        // non loggato
+        // NON LOGGATO
 
         if (!session) {
 
@@ -139,12 +144,12 @@
 
 
 
-        // prende achievement sbloccati
+        // ACHIEVEMENTS SBLOCCATI
 
         const {
           data: unlockedData,
           error
-        } = await supabase
+        } = await achievementsSupabase
           .from('unlocked_achievements')
           .select('*')
           .eq('user_id', USER_ID);
@@ -152,19 +157,25 @@
 
 
         if (error) {
+
           console.error(error);
+
         }
 
 
 
-        // organizza dati
+        // ORGANIZZA DATI
 
         const unlocked = {};
+
+
 
         unlockedData?.forEach(row => {
 
           if (!unlocked[row.game]) {
+
             unlocked[row.game] = [];
+
           }
 
           unlocked[row.game]
@@ -174,7 +185,7 @@
 
 
 
-        // render giochi
+        // RENDER GIOCHI
 
         for (const gameId in data.game) {
 
@@ -183,12 +194,13 @@
 
 
 
-          // titolo gioco
+          // TITOLO GIOCO
 
           const title =
             document.createElement('h2');
 
-          title.className = 'game-title';
+          title.className =
+            'game-title';
 
           title.textContent =
             gameId.replaceAll('-', ' ');
@@ -197,7 +209,7 @@
 
 
 
-          // grid
+          // GRID
 
           const grid =
             document.createElement('div');
@@ -207,12 +219,14 @@
 
 
 
-          // achievements
+          // ACHIEVEMENTS
 
           for (const achievementId in gameAchievements) {
 
             const achievement =
-              gameAchievements[achievementId];
+              gameAchievements[
+                achievementId
+              ];
 
 
 
@@ -225,6 +239,8 @@
 
             const card =
               document.createElement('div');
+
+
 
             card.className =
               `achievement ${
@@ -255,6 +271,8 @@
 
             `;
 
+
+
             grid.appendChild(card);
 
           }
@@ -277,7 +295,7 @@
 
 
 
-    // UNLOCK ACHIEVEMENT
+    // SBLOCCA ACHIEVEMENT
 
     async function unlockAchievement(
       game,
@@ -286,7 +304,9 @@
 
       const {
         data: { session }
-      } = await supabase.auth.getSession();
+      } = await achievementsSupabase
+        .auth
+        .getSession();
 
 
 
@@ -299,11 +319,11 @@
 
 
 
-      // controlla se già esiste
+      // GIÀ SBLOCCATO?
 
       const {
         data: existing
-      } = await supabase
+      } = await achievementsSupabase
         .from('unlocked_achievements')
         .select('*')
         .eq('user_id', userId)
@@ -317,9 +337,9 @@
 
 
 
-      // salva
+      // SALVA
 
-      await supabase
+      await achievementsSupabase
         .from('unlocked_achievements')
         .insert({
 
@@ -333,7 +353,7 @@
 
 
 
-      // refresh pagina
+      // REFRESH
 
       location.reload();
 
