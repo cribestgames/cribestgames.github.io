@@ -6,6 +6,8 @@ window.achievementsSupabase =
 
 
 
+// SBLOCCA ACHIEVEMENT
+
 window.unlockAchievement =
 async function(game, achievement) {
 
@@ -15,7 +17,13 @@ async function(game, achievement) {
     .auth
     .getSession();
 
+
+
+  // non loggato
+
   if (!session) return;
+
+
 
   const userId =
     session.user.id;
@@ -36,11 +44,13 @@ async function(game, achievement) {
 
 
 
+  // già sbloccato
+
   if (existing) return;
 
 
 
-  // salva
+  // salva su supabase
 
   await achievementsSupabase
     .from('unlocked_achievements')
@@ -56,16 +66,25 @@ async function(game, achievement) {
 
 
 
-  // POPUP
+  // popup
 
   showAchievementPopup(
     game,
     achievement
   );
 
+
+
+  console.log(
+    'Achievement unlocked:',
+    achievement
+  );
+
 };
 
 
+
+// POPUP
 
 window.showAchievementPopup =
 function(game, achievement) {
@@ -77,8 +96,12 @@ function(game, achievement) {
       'achievement-popup'
     );
 
+
+
   if (oldPopup) {
+
     oldPopup.remove();
+
   }
 
 
@@ -100,29 +123,52 @@ function(game, achievement) {
 
 
 
+  // stile
+
   iframe.style.position =
     'fixed';
 
-  iframe.style.top =
-    '0';
 
-  iframe.style.left =
-    '0';
+
+  iframe.style.top =
+    '20px';
+
+
+
+  iframe.style.right =
+    '20px';
+
+
 
   iframe.style.width =
-    '100%';
+    '400px';
+
+
 
   iframe.style.height =
-    '100%';
+    '120px';
+
+
 
   iframe.style.border =
     'none';
 
-  iframe.style.pointerEvents =
-    'none';
+
+
+  iframe.style.background =
+    'transparent';
+
+
 
   iframe.style.zIndex =
     '999999';
+
+
+
+  // IMPORTANTISSIMO
+
+  iframe.style.pointerEvents =
+    'none';
 
 
 
@@ -134,7 +180,7 @@ function(game, achievement) {
 
 
 
-// chiude popup
+// chiusura popup
 
 window.addEventListener(
   'message',
@@ -150,8 +196,12 @@ window.addEventListener(
           'achievement-popup'
         );
 
+
+
       if (popup) {
+
         popup.remove();
+
       }
 
     }
