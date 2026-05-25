@@ -92,6 +92,7 @@
       const maxSize = Math.min(window.innerWidth, window.innerHeight);
       let firstClickUnlocked = false;
       let keepGoingUnlocked = false;
+      let itResettedUnlocked = false;
 
       // Aggiorna i contatori iniziali
       contatore.innerText = "click: " + clickCount.toFixed(1);
@@ -152,6 +153,20 @@ if (
   unlockAchievement(
     'ball-clicker',
     'keep-going'
+  );
+
+}
+
+if (
+  coinCount >= 1 &&
+  !itResettedUnlocked
+) {
+
+  itResettedUnlocked = true;
+
+  unlockAchievement(
+    'ball-clicker',
+    'it-resetted'
   );
 
 }
