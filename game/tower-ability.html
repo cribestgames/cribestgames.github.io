@@ -18,6 +18,14 @@
 <div id="highScore" class="record">record: 0</div>
 
 <script>
+window.onload = function() {
+
+  unlockAchievement(
+    'tower-ability',
+    'first-time'
+  );
+
+};
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 const recordElement = document.getElementById("highScore");
