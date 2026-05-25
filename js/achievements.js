@@ -56,9 +56,105 @@ async function(game, achievement) {
 
 
 
-  console.log(
-    'Achievement unlocked:',
+  // POPUP
+
+  showAchievementPopup(
+    game,
     achievement
   );
 
 };
+
+
+
+window.showAchievementPopup =
+function(game, achievement) {
+
+  // rimuove popup precedente
+
+  const oldPopup =
+    document.getElementById(
+      'achievement-popup'
+    );
+
+  if (oldPopup) {
+    oldPopup.remove();
+  }
+
+
+
+  // iframe
+
+  const iframe =
+    document.createElement('iframe');
+
+
+
+  iframe.id =
+    'achievement-popup';
+
+
+
+  iframe.src =
+    `/achievements/unlocked.html?game=${game}&achievement=${achievement}`;
+
+
+
+  iframe.style.position =
+    'fixed';
+
+  iframe.style.top =
+    '0';
+
+  iframe.style.left =
+    '0';
+
+  iframe.style.width =
+    '100%';
+
+  iframe.style.height =
+    '100%';
+
+  iframe.style.border =
+    'none';
+
+  iframe.style.pointerEvents =
+    'none';
+
+  iframe.style.zIndex =
+    '999999';
+
+
+
+  document.body.appendChild(
+    iframe
+  );
+
+};
+
+
+
+// chiude popup
+
+window.addEventListener(
+  'message',
+  event => {
+
+    if (
+      event.data ===
+      'achievement-close'
+    ) {
+
+      const popup =
+        document.getElementById(
+          'achievement-popup'
+        );
+
+      if (popup) {
+        popup.remove();
+      }
+
+    }
+
+  }
+);
