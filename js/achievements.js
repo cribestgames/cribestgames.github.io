@@ -135,10 +135,10 @@ function(game, achievement) {
   // dimensioni REALI popup
 
   iframe.style.width =
-    '360px';
+    '420px';
 
   iframe.style.height =
-    '110px';
+    '140px';
 
 
 
