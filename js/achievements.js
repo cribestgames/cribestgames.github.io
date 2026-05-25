@@ -96,12 +96,8 @@ function(game, achievement) {
       'achievement-popup'
     );
 
-
-
   if (oldPopup) {
-
     oldPopup.remove();
-
   }
 
 
@@ -123,58 +119,75 @@ function(game, achievement) {
 
 
 
-  // stile
+  // posizione
 
   iframe.style.position =
     'fixed';
 
-
-
   iframe.style.top =
     '20px';
-
-
 
   iframe.style.right =
     '20px';
 
 
 
+  // dimensioni REALI popup
+
   iframe.style.width =
-    '400px';
-
-
+    '360px';
 
   iframe.style.height =
-    '120px';
+    '110px';
 
 
 
   iframe.style.border =
     'none';
 
-
-
   iframe.style.background =
     'transparent';
 
 
 
-  iframe.style.zIndex =
-    '999999';
-
-
-
-  // IMPORTANTISSIMO
+  // importante
 
   iframe.style.pointerEvents =
     'none';
 
 
 
+  // z-index alto
+
+  iframe.style.zIndex =
+    '999999';
+
+
+
   document.body.appendChild(
     iframe
   );
+
+
+
+  // dopo 5 sec abbassa z-index
+  // così il gioco torna sopra
+
+  setTimeout(() => {
+
+    iframe.style.zIndex = '-1';
+
+  }, 5000);
+
+
+
+  // dopo 6 sec elimina
+
+  setTimeout(() => {
+
+    iframe.remove();
+
+  }, 6000);
 
 };
 
