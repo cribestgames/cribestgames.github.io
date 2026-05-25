@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/achievements.js"></script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9156802341247934"
      crossorigin="anonymous"></script>
     <meta charset="UTF-8">
@@ -18,10 +20,13 @@
 <div id="highScore" class="record">record: 0</div>
 
 <script>
+window.onload = function() {
+
   unlockAchievement(
     'tower-ability',
     'first-time'
   );
+};
     
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
