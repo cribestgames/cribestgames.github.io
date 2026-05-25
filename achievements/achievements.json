@@ -8,6 +8,14 @@
       "keep-going": {
         "name": "100 Clicks",
         "description": "Get 100 clicks"
+      },
+      "it-resetted": {
+        "name": "It resetted?!?",
+        "description": "Get your first reset"
+      },
+      "you-like-it" {
+        "name": "A true player",
+        "description": "Wow, you must really like this game!"
       }
     },
 
