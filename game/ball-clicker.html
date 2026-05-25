@@ -124,18 +124,23 @@
           absreset.style.opacity = 1;
         }
 
-          unlockAchievement(
-        if (clickCount > 0) {
-            'ball-clicker',
-            'first-click'
-          );
-  }
-        if (clickCount >= 100) {
-          unlockAchievement(
-            'ball-clicker',
-            'keep-going'
-          );
-  }
+          if (clickCount > 0) {
+
+  unlockAchievement(
+    'ball-clicker',
+    'first-click'
+  );
+
+}
+
+if (clickCount >= 100) {
+
+  unlockAchievement(
+    'ball-clicker',
+    'keep-going'
+  );
+
+}
 
         contatore.innerText = "click: " + clickCount.toFixed(1);
         monete.innerText = "resets: " + coinCount;
