@@ -20,13 +20,23 @@
 <div id="highScore" class="record">record: 0</div>
 
 <script>
-window.onload = function() {
+window.addEventListener(
+  'load',
+  () => {
 
-  unlockAchievement(
-    'tower-ability',
-    'first-time'
-  );
-};
+    if (
+      window.unlockAchievement
+    ) {
+
+      unlockAchievement(
+        'tower-ability',
+        'first-time'
+      );
+
+    }
+
+  }
+);
     
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
