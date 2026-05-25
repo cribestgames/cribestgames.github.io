@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Achievements</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 30px;
+      font-family: Arial, sans-serif;
+      background: rgb(54,18,18);
+      color: white;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .game-title {
+      margin-top: 35px;
+      margin-bottom: 15px;
+      font-size: 24px;
+    }
+
+    .achievements-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .achievement {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: 0.2s;
+    }
+
+    .achievement.unlocked {
+      border-color: #4CAF50;
+      background: rgba(76,175,80,0.15);
+    }
+
+    .achievement.locked {
+      opacity: 0.7;
+    }
+
+    .achievement-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .achievement-icon {
+      font-size: 26px;
+    }
+
+    .achievement-name {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .achievement-description {
+      color: #ddd;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🏆 Achievements</h1>
+
+  <div id="achievements-container"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const supabaseUrl = 'https://ysffeiaeuuuhfxkwtumt.supabase.co/';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzZmZlaWFldXV1aGZ4a3d0dW10Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NTY3NjgsImV4cCI6MjA5MzEzMjc2OH0.fLCVXeNcUsycEiUlelLYwJQ4AGmG_MiL8ri2i5SXlmg';
+
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    async function loadAchievements() {
+      const response = await fetch('/achievements/achievements.json');
+      const data = await response.json();
+
+      const container = document.getElementById('achievements-container');
+
+      // achievements sbloccati salvati nel localStorage
+      // esempio:
+      // {
+      //   "ball-clicker": ["achievement-1"]
+      // }
+      // prende gli achievement sbloccati da Supabase
+      const { data: unlockedData } = await supabase
+        .from('unlocked_achievements')
+        .select('*');
+
+      const unlocked = {};
+
+      unlockedData?.forEach(row => {
+        if (!unlocked[row.game]) {
+          unlocked[row.game] = [];
+        }
+
+        unlocked[row.game].push(row.achievement);
+      });
+
+      for (const gameId in data.game) {
+        const gameAchievements = data.game[gameId];
+
+        const title = document.createElement('h2');
+        title.className = 'game-title';
+        title.textContent = gameId;
+        container.appendChild(title);
+
+        const grid = document.createElement('div');
+        grid.className = 'achievements-grid';
+
+        for (const achievementId in gameAchievements) {
+          const achievement = gameAchievements[achievementId];
+
+          const isUnlocked = unlocked[gameId]?.includes(achievementId);
+
+          const card = document.createElement('div');
+          card.className = `achievement ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+          card.innerHTML = `
+            <div class="achievement-header">
+              <div class="achievement-icon">
+                ${isUnlocked ? '🏆' : '🔒'}
+              </div>
+
+              <div class="achievement-name">
+                ${achievement.name}
+              </div>
+            </div>
+
+            <div class="achievement-description">
+              ${achievement.description}
+            </div>
+          `;
+
+          grid.appendChild(card);
+        }
+
+        container.appendChild(grid);
+      }
+    }
+
+    loadAchievements();
+  </script>
+</body>
+</html>
