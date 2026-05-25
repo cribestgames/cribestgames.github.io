@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Achievement Unlocked</title>
+
+  <style>
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: transparent;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    .popup {
+
+      position: fixed;
+
+      top: 20px;
+      right: 20px;
+
+      width: 350px;
+
+      background: rgba(30,30,30,0.95);
+
+      border: 2px solid #4CAF50;
+
+      border-radius: 18px;
+
+      padding: 18px;
+
+      color: white;
+
+      display: flex;
+
+      gap: 15px;
+
+      align-items: center;
+
+      animation:
+        slideIn 0.4s ease,
+        fadeOut 0.4s ease 4s forwards;
+
+      backdrop-filter: blur(10px);
+
+      box-shadow:
+        0 0 20px rgba(0,0,0,0.4);
+
+    }
+
+    .icon {
+      font-size: 42px;
+    }
+
+    .content {
+      flex: 1;
+    }
+
+    .title {
+      font-size: 14px;
+      opacity: 0.7;
+      margin-bottom: 5px;
+    }
+
+    .name {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .description {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    @keyframes slideIn {
+
+      from {
+        transform:
+          translateX(120%);
+        opacity: 0;
+      }
+
+      to {
+        transform:
+          translateX(0);
+        opacity: 1;
+      }
+
+    }
+
+    @keyframes fadeOut {
+
+      to {
+        opacity: 0;
+        transform:
+          translateX(120%);
+      }
+
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="popup">
+
+    <div class="icon">
+      🏆
+    </div>
+
+    <div class="content">
+
+      <div class="title">
+        Achievement Unlocked
+      </div>
+
+      <div
+        class="name"
+        id="achievement-name"
+      >
+        Loading...
+      </div>
+
+      <div
+        class="description"
+        id="achievement-description"
+      >
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    async function loadAchievement() {
+
+      const params =
+        new URLSearchParams(
+          window.location.search
+        );
+
+      const game =
+        params.get('game');
+
+      const achievement =
+        params.get('achievement');
+
+
+
+      if (!game || !achievement) return;
+
+
+
+      // prende json
+
+      const response =
+        await fetch('./achievements.json');
+
+      const data =
+        await response.json();
+
+
+
+      const achievementData =
+        data.game?.[game]?.[achievement];
+
+
+
+      if (!achievementData) return;
+
+
+
+      document.getElementById(
+        'achievement-name'
+      ).textContent =
+        achievementData.name;
+
+
+
+      document.getElementById(
+        'achievement-description'
+      ).textContent =
+        achievementData.description;
+
+
+
+      // chiude popup
+
+      setTimeout(() => {
+
+        window.parent.postMessage(
+          'achievement-close',
+          '*'
+        );
+
+      }, 4500);
+
+    }
+
+
+
+    loadAchievement();
+
+  </script>
+
+</body>
+</html>
