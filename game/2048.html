@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>2048</title>
+
+<style>
+:root{
+  --bg:#faf8ef;
+  --text:#776e65;
+  --board:#bbada0;
+  --empty:#cdc1b4;
+  --button:#8f7a66;
+  --button-hover:#6f5d4d;
+}
+
+body.dark{
+  --bg:#121212;
+  --text:#f5f5f5;
+  --board:#2c2c2c;
+  --empty:#3c3c3c;
+  --button:#444;
+  --button-hover:#666;
+}
+
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  flex-direction:column;
+  transition:background .3s,color .3s;
+  padding:20px;
+  overflow:hidden;
+  touch-action:none;
+}
+
+.topbar{
+  width:min(92vw,430px);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+h1{
+  font-size:56px;
+}
+
+.score{
+  background:var(--board);
+  color:white;
+  padding:10px 18px;
+  border-radius:10px;
+  font-weight:bold;
+  font-size:22px;
+}
+
+.board{
+  width:min(92vw,430px);
+  height:min(92vw,430px);
+  background:var(--board);
+  border-radius:12px;
+  padding:10px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  position:relative;
+}
+
+.tile{
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  font-size:clamp(24px,5vw,34px);
+  user-select:none;
+
+  animation:pop .18s ease;
+  transition:
+    transform .12s ease,
+    background .25s ease,
+    color .25s ease;
+}
+
+.tile:hover{
+  transform:scale(1.03);
+}
+
+@keyframes pop{
+  0%{
+    transform:scale(0.4);
+    opacity:0;
+  }
+  100%{
+    transform:scale(1);
+    opacity:1;
+  }
+}
+
+.tile-0{ background:var(--empty); color:transparent; }
+.tile-2{ background:#eee4da; color:#776e65; }
+.tile-4{ background:#ede0c8; color:#776e65; }
+.tile-8{ background:#f2b179; color:white; }
+.tile-16{ background:#f59563; color:white; }
+.tile-32{ background:#f67c5f; color:white; }
+.tile-64{ background:#f65e3b; color:white; }
+.tile-128{ background:#edcf72; color:white; }
+.tile-256{ background:#edcc61; color:white; }
+.tile-512{ background:#edc850; color:white; }
+.tile-1024{ background:#edc53f; color:white; font-size:22px; }
+.tile-2048{ background:#edc22e; color:white; font-size:22px; }
+
+.controls{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+}
+
+button{
+  border:none;
+  padding:12px 18px;
+  border-radius:10px;
+  background:var(--button);
+  color:white;
+  cursor:pointer;
+  font-size:16px;
+  transition:.2s;
+}
+
+button:hover{
+  background:var(--button-hover);
+  transform:translateY(-2px);
+}
+
+.message{
+  margin-top:18px;
+  font-size:24px;
+  font-weight:bold;
+  min-height:30px;
+}
+
+.win{
+  animation:glow 1s infinite alternate;
+}
+
+@keyframes glow{
+  from{
+    box-shadow:0 0 5px gold;
+  }
+  to{
+    box-shadow:0 0 25px gold;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>2048</h1>
+
+  <div class="score">
+    Score: <span id="score">0</span>
+  </div>
+</div>
+
+<div class="board" id="board"></div>
+
+<div class="controls">
+  <button onclick="restartGame()">🔄 New game</button>
+  <button onclick="toggleTheme()">🌙 / ☀️</button>
+</div>
+
+<div class="message" id="message"></div>
+
+<script>
+const board = document.getElementById("board");
+const scoreEl = document.getElementById("score");
+const messageEl = document.getElementById("message");
+
+let grid = [];
+let score = 0;
+
+function initGame(){
+
+  grid = Array(4)
+    .fill()
+    .map(()=>Array(4).fill(0));
+
+  score = 0;
+  messageEl.textContent = "";
+
+  addRandomTile();
+  addRandomTile();
+
+  drawBoard();
+}
+
+function drawBoard(){
+
+  board.innerHTML = "";
+
+  for(let r=0;r<4;r++){
+
+    for(let c=0;c<4;c++){
+
+      const value = grid[r][c];
+
+      const tile = document.createElement("div");
+
+      tile.className = `tile tile-${value}`;
+
+      if(value >= 2048){
+        tile.classList.add("win");
+      }
+
+      tile.textContent = value || "";
+
+      board.appendChild(tile);
+    }
+  }
+
+  scoreEl.textContent = score;
+}
+
+function addRandomTile(){
+
+  let empty = [];
+
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+
+      if(grid[r][c] === 0){
+        empty.push({r,c});
+      }
+    }
+  }
+
+  if(empty.length === 0) return;
+
+  const spot =
+    empty[Math.floor(Math.random()*empty.length)];
+
+  grid[spot.r][spot.c] =
+    Math.random() < 0.9 ? 2 : 4;
+}
+
+function slide(row){
+
+  row = row.filter(v=>v);
+
+  for(let i=0;i<row.length-1;i++){
+
+    if(row[i] === row[i+1]){
+
+      row[i] *= 2;
+      score += row[i];
+      row[i+1] = 0;
+    }
+  }
+
+  row = row.filter(v=>v);
+
+  while(row.length < 4){
+    row.push(0);
+  }
+
+  return row;
+}
+
+function rotate(matrix){
+
+  return matrix[0].map((_,i)=>
+    matrix.map(row=>row[i]).reverse()
+  );
+}
+
+function gridsEqual(a,b){
+
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function moveLeft(){
+
+  let old = JSON.stringify(grid);
+
+  for(let r=0;r<4;r++){
+    grid[r] = slide(grid[r]);
+  }
+
+  if(old !== JSON.stringify(grid)){
+    addRandomTile();
+  }
+
+  drawBoard();
+  checkGame();
+}
+
+function moveRight(){
+
+  grid = grid.map(r=>r.reverse());
+  moveLeft();
+  grid = grid.map(r=>r.reverse());
+
+  drawBoard();
+}
+
+function moveUp(){
+
+  grid = rotate(rotate(rotate(grid)));
+
+  moveLeft();
+
+  grid = rotate(grid);
+
+  drawBoard();
+}
+
+function moveDown(){
+
+  grid = rotate(grid);
+
+  moveLeft();
+
+  grid = rotate(
+    rotate(
+      rotate(grid)
+    )
+  );
+
+  drawBoard();
+}
+
+function checkGame(){
+
+  for(let row of grid){
+
+    if(row.includes(2048)){
+      messageEl.textContent = "🎉 Hai vinto!";
+      return;
+    }
+  }
+
+  for(let r=0;r<4;r++){
+    for(let c=0;c<4;c++){
+
+      if(grid[r][c] === 0) return;
+
+      if(c<3 && grid[r][c]===grid[r][c+1]) return;
+      if(r<3 && grid[r][c]===grid[r+1][c]) return;
+    }
+  }
+
+  messageEl.textContent = "💀 Game Over";
+}
+
+function restartGame(){
+  initGame();
+}
+
+document.addEventListener("keydown",(e)=>{
+
+  switch(e.key){
+
+    case "ArrowLeft":
+      moveLeft();
+      break;
+
+    case "ArrowRight":
+      moveRight();
+      break;
+
+    case "ArrowUp":
+      moveUp();
+      break;
+
+    case "ArrowDown":
+      moveDown();
+      break;
+  }
+});
+
+let startX = 0;
+let startY = 0;
+
+document.addEventListener("touchstart",(e)=>{
+
+  startX = e.touches[0].clientX;
+  startY = e.touches[0].clientY;
+
+},{passive:true});
+
+document.addEventListener("touchend",(e)=>{
+
+  let endX = e.changedTouches[0].clientX;
+  let endY = e.changedTouches[0].clientY;
+
+  let dx = endX - startX;
+  let dy = endY - startY;
+
+  if(Math.abs(dx) > Math.abs(dy)){
+
+    if(dx > 30){
+      moveRight();
+    }
+
+    if(dx < -30){
+      moveLeft();
+    }
+
+  } else {
+
+    if(dy > 30){
+      moveDown();
+    }
+
+    if(dy < -30){
+      moveUp();
+    }
+  }
+
+});
+
+function toggleTheme(){
+
+  document.body.classList.toggle("dark");
+
+  localStorage.setItem(
+    "theme",
+    document.body.classList.contains("dark")
+      ? "dark"
+      : "light"
+  );
+}
+
+if(localStorage.getItem("theme")==="dark"){
+  document.body.classList.add("dark");
+}
+
+initGame();
+</script>
+
+</body>
+</html>
