@@ -24,6 +24,13 @@
         "name": "First time!",
         "description": "Run the game"
       }
+    },
+
+    "minesweeper": {
+      "boom": {
+        "name": "Boom!",
+        "description": "Lose for the first time"
+      }
     }
   }
 }
