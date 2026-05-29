@@ -28,6 +28,25 @@
 
     .back-btn:hover { color: white; }
     
+    .achievements-btn {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 28px;
+      transition: 0.2s;
+      position: absolute;
+      right: 5%;
+      top: 5%;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      padding: 3px;
+    }
+
+    .achievements-btn:hover {
+        color: rgba(255,255,255,2.5);
+        background: rgba(255,255,255,0.03);
+    }
+    
     .profile-box {
       width: 340px;
       padding: 35px;
@@ -109,6 +128,7 @@
 <body>
   <div class="profile-box">
       <a class="back-btn" id="back-btn" href="/">← Home</a>
+      <a class="achievements-btn" id="achievements-btn" href="/achievements">🏆</a>
 
     <div class="avatar-wrapper" onclick="document.getElementById('file-input').click()">
       <img id="avatar" class="avatar" src="">
