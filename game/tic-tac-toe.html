@@ -118,11 +118,11 @@ input{
     />
 
     <button onclick="hostRoom()">
-        Crea stanza
+        Create room
     </button>
 
     <button onclick="joinRoom()">
-        Entra
+        Enter
     </button>
 
 </div>
@@ -244,7 +244,7 @@ function move(index){
         if(!conn || !conn.open){
 
             statusEl.innerText =
-                "Non connesso";
+                "Not connected";
 
             return;
         }
@@ -252,7 +252,7 @@ function move(index){
         if(turn !== myRole){
 
             statusEl.innerText =
-                "Turno di " + turn;
+                 "Player " + turn + " turn";
 
             return;
         }
@@ -408,7 +408,7 @@ function hostRoom(){
         console.log("HOST OPEN:",id);
 
         statusEl.innerText =
-            "Stanza creata";
+            "Room created";
     });
 
     peer.on("connection",(connection)=>{
@@ -426,7 +426,7 @@ function hostRoom(){
             );
 
             statusEl.innerText =
-                "Giocatore connesso!";
+                "Player connected";
         });
 
         conn.on("close",()=>{
@@ -447,7 +447,7 @@ function hostRoom(){
             );
 
             statusEl.innerText =
-                "Errore connessione";
+                "Connection error";
         });
     });
 
@@ -456,7 +456,7 @@ function hostRoom(){
         console.log("HOST ERROR:", err);
 
         statusEl.innerText =
-            "Errore host";
+            "Host error";
     });
 }
 
@@ -486,7 +486,7 @@ function joinRoom(){
     myRole = "O";
 
     statusEl.innerText =
-        "Connessione...";
+        "Connecting...";
 
     peer = new Peer(peerConfig);
 
@@ -510,7 +510,7 @@ function joinRoom(){
             );
 
             statusEl.innerText =
-                "Connesso! Sei O";
+                "Connected! You're O";
 
             conn.send({
                 type:"syncRequest"
@@ -524,7 +524,7 @@ function joinRoom(){
             );
 
             statusEl.innerText =
-                "Connessione chiusa";
+                "Connection closed";
         });
 
         conn.on("error",(err)=>{
@@ -535,7 +535,7 @@ function joinRoom(){
             );
 
             statusEl.innerText =
-                "Errore connessione";
+                "connection error";
         });
 
     });
@@ -545,7 +545,7 @@ function joinRoom(){
         console.log("CLIENT ERROR:", err);
 
         statusEl.innerText =
-            "Errore PeerJS";
+            "PeerJS error";
     });
 }
 
@@ -610,7 +610,7 @@ function setupConnection(){
             drawBoard();
 
             statusEl.innerText =
-                "Nuova partita";
+                "New game";
 
             return;
         }
