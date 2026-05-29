@@ -6,13 +6,15 @@
 
 <title>Tic Tac Toe</title>
 
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
 <style>
 
 body{
     margin:0;
+    font-family:Arial;
     background:#0f172a;
     color:white;
-    font-family:Arial;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -22,7 +24,7 @@ body{
 
 .container{
     width:100%;
-    max-width:550px;
+    max-width:500px;
     text-align:center;
 }
 
@@ -35,8 +37,8 @@ body{
 
 .cell{
     background:#1e293b;
-    border-radius:12px;
     aspect-ratio:1;
+    border-radius:12px;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -49,8 +51,8 @@ button,input,select{
     padding:10px;
     border:none;
     border-radius:10px;
-    font-size:16px;
     margin:5px;
+    font-size:16px;
 }
 
 button{
@@ -66,24 +68,14 @@ input{
     color:white;
 }
 
-.room{
-    background:#1e293b;
-    padding:12px;
-    border-radius:12px;
-    margin-top:10px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
 #status{
     margin-top:15px;
     color:#94a3b8;
     font-size:18px;
 }
 
-#rooms{
-    margin-top:20px;
+#onlinePanel{
+    margin-top:15px;
 }
 
 .hidden{
@@ -102,31 +94,29 @@ input{
 <select id="mode">
     <option value="local">Local</option>
     <option value="bot">Bot</option>
-    <option value="lan">LAN / Same WiFi</option>
+    <option value="online">Online</option>
 </select>
 
 <button onclick="resetGame()">
     Reset
 </button>
 
-<!-- LAN UI -->
+<!-- ONLINE -->
 
-<div id="lanPanel" class="hidden">
+<div id="onlinePanel" class="hidden">
 
     <input
         id="roomInput"
         placeholder="Nome stanza"
     />
 
-    <button onclick="createRoom()">
-        Crea Stanza
+    <button onclick="hostRoom()">
+        Crea stanza
     </button>
 
-    <button onclick="loadRooms()">
-        Aggiorna
+    <button onclick="joinRoom()">
+        Entra
     </button>
-
-    <div id="rooms"></div>
 
 </div>
 
@@ -150,6 +140,8 @@ let turn = "X";
 
 let over = false;
 
+let myRole = null;
+
 const wins = [
     [0,1,2],
     [3,4,5],
@@ -170,21 +162,27 @@ const statusEl =
 const modeEl =
     document.getElementById("mode");
 
-const lanPanel =
-    document.getElementById("lanPanel");
+const onlinePanel =
+    document.getElementById("onlinePanel");
+
+// =====================================================
+// PEERJS
+// =====================================================
+
+let peer;
+
+let conn;
+
+// =====================================================
+// MODE
+// =====================================================
 
 modeEl.onchange = ()=>{
 
-    if(modeEl.value === "lan"){
-
-        lanPanel.classList.remove("hidden");
-
-        loadRooms();
-
-    }else{
-
-        lanPanel.classList.add("hidden");
-    }
+    onlinePanel.classList.toggle(
+        "hidden",
+        modeEl.value !== "online"
+    );
 
     resetGame();
 };
@@ -224,11 +222,14 @@ function move(index){
 
     if(board[index]) return;
 
-    // ================= LAN =================
+    // ONLINE TURN CHECK
 
-    if(modeEl.value === "lan"){
+    if(modeEl.value === "online"){
 
-        if(turn !== myPlayer)
+        if(!conn || !conn.open)
+            return;
+
+        if(turn !== myRole)
             return;
     }
 
@@ -243,19 +244,18 @@ function move(index){
 
         over = true;
 
-        saveRoom();
+        sendMove(index, board[index]);
 
         return;
     }
 
     if(board.every(v=>v)){
 
-        statusEl.innerText =
-            "Draw!";
+        statusEl.innerText = "Draw!";
 
         over = true;
 
-        saveRoom();
+        sendMove(index, board[index]);
 
         return;
     }
@@ -268,14 +268,14 @@ function move(index){
     statusEl.innerText =
         "Player " + turn + " turn";
 
-    // ================= BOT =================
+    // BOT
 
     if(modeEl.value === "bot" && turn === "O"){
 
         setTimeout(botMove,400);
     }
 
-    saveRoom();
+    sendMove(index, board[index]);
 }
 
 // =====================================================
@@ -321,101 +321,53 @@ function resetGame(){
 
     drawBoard();
 
-    if(modeEl.value === "lan"){
+    if(conn && conn.open){
 
-        saveRoom();
+        conn.send({
+            type:"reset"
+        });
     }
 }
 
 // =====================================================
-// LAN SYSTEM
+// HOST ROOM
 // =====================================================
 
-const ROOM_KEY = "ttt_rooms";
+function hostRoom(){
 
-let roomId = null;
-
-let myPlayer = null;
-
-// =====================================================
-// CREATE ROOM
-// =====================================================
-
-function createRoom(){
-
-    const name =
+    const roomId =
         document
         .getElementById("roomInput")
         .value
         .trim();
 
-    if(!name) return;
+    if(!roomId) return;
 
-    const rooms =
-        JSON.parse(
-            localStorage.getItem(ROOM_KEY)
-            || "[]"
-        );
+    myRole = "X";
 
-    const id =
-        Math.random()
-        .toString(36)
-        .slice(2);
+    peer = new Peer(roomId);
 
-    rooms.push({
-        id,
-        name,
-        board:Array(9).fill(""),
-        turn:"X",
-        over:false,
-        players:1
+    peer.on("open", ()=>{
+
+        statusEl.innerText =
+            "Stanza creata: " + roomId;
     });
 
-    localStorage.setItem(
-        ROOM_KEY,
-        JSON.stringify(rooms)
-    );
+    peer.on("connection",(connection)=>{
 
-    joinRoom(id,"X");
+        conn = connection;
 
-    loadRooms();
-}
+        setupConnection();
 
-// =====================================================
-// LOAD ROOMS
-// =====================================================
+        statusEl.innerText =
+            "Giocatore connesso!";
+    });
 
-function loadRooms(){
+    peer.on("error",(err)=>{
 
-    const roomsEl =
-        document.getElementById("rooms");
+        console.log(err);
 
-    roomsEl.innerHTML = "";
-
-    const rooms =
-        JSON.parse(
-            localStorage.getItem(ROOM_KEY)
-            || "[]"
-        );
-
-    rooms.forEach(room=>{
-
-        if(room.players >= 2)
-            return;
-
-        const div =
-            document.createElement("div");
-
-        div.className = "room";
-
-        div.innerHTML = `
-            <span>${room.name}</span>
-            <button onclick="joinRoom('${room.id}','O')">
-                Join
-            </button>
-        `;
-
-        roomsEl.appendChild(div);
+        alert("Errore stanza");
     });
 }
 
@@ -423,112 +375,121 @@ function loadRooms(){
 // JOIN ROOM
 // =====================================================
 
-function joinRoom(id,player){
+function joinRoom(){
 
-    roomId = id;
+    const roomId =
+        document
+        .getElementById("roomInput")
+        .value
+        .trim();
 
-    myPlayer = player;
+    if(!roomId) return;
 
-    const rooms =
-        JSON.parse(
-            localStorage.getItem(ROOM_KEY)
-            || "[]"
-        );
+    myRole = "O";
 
-    const room =
-        rooms.find(r=>r.id===id);
+    peer = new Peer();
 
-    if(!room) return;
+    peer.on("open",()=>{
 
-    if(player === "O"){
+        conn = peer.connect(roomId);
 
-        room.players = 2;
+        conn.on("open",()=>{
+
+            setupConnection();
+
+            statusEl.innerText =
+                "Connesso!";
+        });
+    });
+
+    peer.on("error",(err)=>{
+
+        console.log(err);
+
+        alert("Errore connessione");
+    });
+}
+
+// =====================================================
+// CONNECTION
+// =====================================================
+
+function setupConnection(){
+
+    conn.on("data",(data)=>{
+
+        // RESET
+
+        if(data.type === "reset"){
+
+            board = Array(9).fill("");
+
+            turn = "X";
+
+            over = false;
+
+            drawBoard();
+
+            statusEl.innerText =
+                "Nuova partita";
+
+            return;
+        }
+
+        // MOVE
+
+        if(data.type === "move"){
+
+            board[data.i] = data.p;
+
+            drawBoard();
+
+            if(checkWinner(data.p)){
+
+                statusEl.innerText =
+                    data.p + " wins!";
+
+                over = true;
+
+                return;
+            }
+
+            if(board.every(v=>v)){
+
+                statusEl.innerText =
+                    "Draw!";
+
+                over = true;
+
+                return;
+            }
+
+            turn =
+                data.p === "X"
+                    ? "O"
+                    : "X";
+
+            statusEl.innerText =
+                "Player " + turn + " turn";
+        }
+    });
+}
+
+// =====================================================
+// SEND MOVE
+// =====================================================
+
+function sendMove(i,p){
+
+    if(conn && conn.open){
+
+        conn.send({
+            type:"move",
+            i,
+            p
+        });
     }
-
-    localStorage.setItem(
-        ROOM_KEY,
-        JSON.stringify(rooms)
-    );
-
-    board = room.board;
-
-    turn = room.turn;
-
-    over = room.over;
-
-    drawBoard();
-
-    statusEl.innerText =
-        "Sei " + myPlayer;
 }
-
-// =====================================================
-// SAVE ROOM
-// =====================================================
-
-function saveRoom(){
-
-    if(modeEl.value !== "lan")
-        return;
-
-    if(!roomId)
-        return;
-
-    const rooms =
-        JSON.parse(
-            localStorage.getItem(ROOM_KEY)
-            || "[]"
-        );
-
-    const room =
-        rooms.find(r=>r.id===roomId);
-
-    if(!room) return;
-
-    room.board = board;
-
-    room.turn = turn;
-
-    room.over = over;
-
-    localStorage.setItem(
-        ROOM_KEY,
-        JSON.stringify(rooms)
-    );
-}
-
-// =====================================================
-// AUTO SYNC
-// =====================================================
-
-setInterval(()=>{
-
-    if(modeEl.value !== "lan")
-        return;
-
-    if(!roomId)
-        return;
-
-    const rooms =
-        JSON.parse(
-            localStorage.getItem(ROOM_KEY)
-            || "[]"
-        );
-
-    const room =
-        rooms.find(r=>r.id===roomId);
-
-    if(!room) return;
-
-    board = room.board;
-
-    turn = room.turn;
-
-    over = room.over;
-
-    drawBoard();
-
-},500);
 
 </script>
 
