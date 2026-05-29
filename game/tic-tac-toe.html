@@ -237,6 +237,8 @@ function move(index){
 
     if(board[index]) return;
 
+    // ONLINE
+
     if(modeEl.value === "online"){
 
         if(!conn || !conn.open){
@@ -289,6 +291,8 @@ function move(index){
 
     statusEl.innerText =
         "Player " + turn + " turn";
+
+    // BOT
 
     if(modeEl.value === "bot" && turn === "O"){
 
@@ -348,6 +352,28 @@ function resetGame(){
 }
 
 // =====================================================
+// ICE SERVERS
+// =====================================================
+
+const peerConfig = {
+
+    config:{
+        iceServers:[
+
+            {
+                urls:[
+                    "stun:stun.l.google.com:19302",
+                    "stun:global.stun.twilio.com:3478"
+                ]
+            }
+
+        ]
+    },
+
+    debug:2
+};
+
+// =====================================================
 // HOST ROOM
 // =====================================================
 
@@ -372,12 +398,9 @@ function hostRoom(){
 
     myRole = "X";
 
-    // =================================================
-    // PEER
-    // =================================================
-
     peer = new Peer(
-        "room-" + roomId
+        "room-" + roomId,
+        peerConfig
     );
 
     peer.on("open",(id)=>{
@@ -398,12 +421,34 @@ function hostRoom(){
 
         conn.on("open",()=>{
 
-            console.log("HOST CONNECTION OPEN");
+            console.log(
+                "HOST CONNECTION OPEN"
+            );
 
             statusEl.innerText =
                 "Giocatore connesso!";
         });
 
+        conn.on("close",()=>{
+
+            console.log(
+                "HOST CONNECTION CLOSED"
+            );
+
+            statusEl.innerText =
+                "Connessione chiusa";
+        });
+
+        conn.on("error",(err)=>{
+
+            console.log(
+                "HOST CONNECTION ERROR:",
+                err
+            );
+
+            statusEl.innerText =
+                "Errore connessione";
+        });
     });
 
     peer.on("error",(err)=>{
@@ -443,7 +488,7 @@ function joinRoom(){
     statusEl.innerText =
         "Connessione...";
 
-    peer = new Peer();
+    peer = new Peer(peerConfig);
 
     peer.on("open",(id)=>{
 
@@ -460,7 +505,9 @@ function joinRoom(){
 
         conn.on("open",()=>{
 
-            console.log("CLIENT CONNECTION OPEN");
+            console.log(
+                "CLIENT CONNECTION OPEN"
+            );
 
             statusEl.innerText =
                 "Connesso! Sei O";
@@ -470,9 +517,22 @@ function joinRoom(){
             });
         });
 
+        conn.on("close",()=>{
+
+            console.log(
+                "CLIENT CONNECTION CLOSED"
+            );
+
+            statusEl.innerText =
+                "Connessione chiusa";
+        });
+
         conn.on("error",(err)=>{
 
-            console.log("CONNECTION ERROR:", err);
+            console.log(
+                "CLIENT CONNECTION ERROR:",
+                err
+            );
 
             statusEl.innerText =
                 "Errore connessione";
@@ -593,14 +653,6 @@ function setupConnection(){
             statusEl.innerText =
                 "Player " + turn + " turn";
         }
-    });
-
-    conn.on("close",()=>{
-
-        console.log("CONNECTION CLOSED");
-
-        statusEl.innerText =
-            "Connessione chiusa";
     });
 }
 
