@@ -230,7 +230,9 @@ function move(index){
     console.log({
         turn,
         myRole,
-        over
+        over,
+        conn,
+        open: conn?.open
     });
 
     if(over) return;
@@ -396,14 +398,37 @@ function hostRoom(){
 
     peer.on("connection",(connection)=>{
 
+        console.log("PLAYER CONNECTING");
+
         conn = connection;
 
-        turn = "X";
+        conn.on("open",()=>{
 
-        setupConnection();
+            console.log("HOST CONNECTION OPEN");
 
-        statusEl.innerText =
-            "Giocatore connesso!";
+            turn = "X";
+
+            setupConnection();
+
+            statusEl.innerText =
+                "Giocatore connesso!";
+        });
+
+        conn.on("close",()=>{
+
+            console.log("HOST CONNECTION CLOSED");
+
+            statusEl.innerText =
+                "Connessione chiusa";
+        });
+
+        conn.on("error",(err)=>{
+
+            console.log("HOST ERROR:", err);
+
+            statusEl.innerText =
+                "Errore connessione";
+        });
     });
 
     peer.on("error",(err)=>{
@@ -480,9 +505,17 @@ function joinRoom(){
             });
         });
 
+        conn.on("close",()=>{
+
+            console.log("CLIENT CONNECTION CLOSED");
+
+            statusEl.innerText =
+                "Connessione chiusa";
+        });
+
         conn.on("error",(err)=>{
 
-            console.log(err);
+            console.log("CLIENT ERROR:", err);
 
             statusEl.innerText =
                 "Errore connessione";
@@ -603,12 +636,6 @@ function setupConnection(){
             statusEl.innerText =
                 "Player " + turn + " turn";
         }
-    });
-
-    conn.on("close",()=>{
-
-        statusEl.innerText =
-            "Connessione chiusa";
     });
 }
 
