@@ -237,7 +237,7 @@ function move(index){
 
     if(board[index]) return;
 
-    // ONLINE
+    // ONLINE CHECK
 
     if(modeEl.value === "online"){
 
@@ -475,17 +475,9 @@ function joinRoom(){
             statusEl.innerText =
                 "Connesso! Sei O";
 
-            // IMPORTANTISSIMO
-            // forza sync iniziale
-
             conn.send({
                 type:"syncRequest"
             });
-        });
-
-        conn.on("data",(data)=>{
-
-            console.log(data);
         });
 
         conn.on("error",(err)=>{
@@ -512,36 +504,50 @@ function joinRoom(){
 // =====================================================
 
 function setupConnection(){
-    if(data.type === "syncRequest"){
-
-    conn.send({
-        type:"syncState",
-        board,
-        turn,
-        over
-    });
-
-    return;
-}
-
-if(data.type === "syncState"){
-
-    board = data.board;
-
-    turn = data.turn;
-
-    over = data.over;
-
-    drawBoard();
-
-    return;
-}
 
     conn.on("data",(data)=>{
 
         console.log("RECV:",data);
 
+        // =========================
+        // SYNC REQUEST
+        // =========================
+
+        if(data.type === "syncRequest"){
+
+            conn.send({
+                type:"syncState",
+                board,
+                turn,
+                over
+            });
+
+            return;
+        }
+
+        // =========================
+        // SYNC STATE
+        // =========================
+
+        if(data.type === "syncState"){
+
+            board = data.board;
+
+            turn = data.turn;
+
+            over = data.over;
+
+            drawBoard();
+
+            statusEl.innerText =
+                "Player " + turn + " turn";
+
+            return;
+        }
+
+        // =========================
         // RESET
+        // =========================
 
         if(data.type === "reset"){
 
@@ -559,7 +565,9 @@ if(data.type === "syncState"){
             return;
         }
 
+        // =========================
         // MOVE
+        // =========================
 
         if(data.type === "move"){
 
