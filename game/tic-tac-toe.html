@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>Tic Tac Toe P2P QR</title>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    width:100%;
+    max-width:500px;
+    text-align:center;
+}
+
+.board{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:20px;
+}
+
+.cell{
+    background:#1e293b;
+    aspect-ratio:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-size:60px;
+    cursor:pointer;
+    border-radius:12px;
+}
+
+button, select{
+    padding:10px;
+    border-radius:10px;
+    border:none;
+    margin:5px;
+    font-size:16px;
+}
+
+button{ background:#2563eb; color:white; cursor:pointer; }
+
+textarea{
+    width:100%;
+    height:90px;
+    margin-top:10px;
+}
+
+#reader{
+    margin-top:10px;
+}
+
+canvas{
+    margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Tic Tac Toe P2P</h1>
+
+<select id="mode">
+  <option value="friend">Local Friend</option>
+  <option value="bot">Bot</option>
+  <option value="p2p">P2P QR</option>
+</select>
+
+<button onclick="reset()">Reset</button>
+
+<div class="board" id="board"></div>
+
+<div id="info">Player X turn</div>
+
+<!-- P2P -->
+<div id="p2p" style="display:none;">
+
+<button onclick="createRoom()">Create Room</button>
+<button onclick="startScan()">Scan QR</button>
+
+<canvas id="qr"></canvas>
+
+<div id="reader"></div>
+
+</div>
+
+</div>
+
+<script>
+
+// ================= GAME =================
+
+let board = Array(9).fill("");
+let turn = "X";
+let over = false;
+
+const win = [
+ [0,1,2],[3,4,5],[6,7,8],
+ [0,3,6],[1,4,7],[2,5,8],
+ [0,4,8],[2,4,6]
+];
+
+const elBoard = document.getElementById("board");
+const info = document.getElementById("info");
+const mode = document.getElementById("mode");
+const p2p = document.getElementById("p2p");
+
+mode.onchange = ()=>{
+ p2p.style.display = mode.value==="p2p"?"block":"none";
+ reset();
+};
+
+function draw(){
+ elBoard.innerHTML="";
+ board.forEach((v,i)=>{
+  let d=document.createElement("div");
+  d.className="cell";
+  d.innerText=v;
+  d.onclick=()=>move(i);
+  elBoard.appendChild(d);
+ });
+}
+
+function move(i){
+ if(over || board[i]) return;
+
+ board[i]=turn;
+ draw();
+
+ if(check(turn)){
+  info.innerText=turn+" wins";
+  over=true;
+  return;
+ }
+
+ turn = turn==="X"?"O":"X";
+ info.innerText="Player "+turn+" turn";
+
+ if(mode.value==="bot" && turn==="O"){
+  setTimeout(bot,400);
+ }
+
+ sendMove(i, board[i]);
+}
+
+function check(p){
+ return win.some(c=>c.every(i=>board[i]===p));
+}
+
+function bot(){
+ let free = board.map((v,i)=>v?null:i).filter(v=>v!==null);
+ let m = free[Math.random()*free.length|0];
+ move(m);
+}
+
+function reset(){
+ board=Array(9).fill("");
+ turn="X";
+ over=false;
+ info.innerText="Player X turn";
+ draw();
+}
+
+draw();
+
+// ================= P2P =================
+
+let peer;
+let dc;
+let host=false;
+
+const cfg={
+ iceServers:[{urls:"stun:stun.l.google.com:19302"}]
+};
+
+function encode(d){return btoa(JSON.stringify(d))}
+function decode(d){return JSON.parse(atob(d))}
+
+function createPeer(){
+ peer=new RTCPeerConnection(cfg);
+
+ peer.onicecandidate=e=>{
+  if(e.candidate) return;
+
+  QRCode.toCanvas(
+   document.getElementById("qr"),
+   encode(peer.localDescription),
+   {width:250}
+  );
+ };
+
+ peer.ondatachannel=e=>{
+  dc=e.channel;
+  setup();
+ };
+
+ if(host){
+  dc=peer.createDataChannel("g");
+  setup();
+ }
+}
+
+async function createRoom(){
+ host=true;
+ createPeer();
+
+ let offer=await peer.createOffer();
+ await peer.setLocalDescription(offer);
+
+ info.innerText="Show QR to friend";
+}
+
+function setup(){
+ dc.onopen=()=>info.innerText="Connected!";
+ dc.onmessage=e=>{
+  let m=JSON.parse(e.data);
+
+  if(m.type==="move"){
+   board[m.i]=m.p;
+   draw();
+
+   if(check(m.p)){
+    info.innerText=m.p+" wins";
+    over=true;
+    return;
+   }
+
+   turn=m.p==="X"?"O":"X";
+   info.innerText="Player "+turn;
+  }
+ };
+}
+
+function sendMove(i,p){
+ if(dc && dc.readyState==="open"){
+  dc.send(JSON.stringify({type:"move",i,p}));
+ }
+}
+
+// scan QR
+
+function startScan(){
+ let r=new Html5Qrcode("reader");
+
+ r.start(
+  {facingMode:"environment"},
+  {fps:10,qrbox:250},
+  async txt=>{
+   r.stop();
+
+   let s=decode(txt);
+
+   if(s.type==="offer"){
+    createPeer();
+
+    await peer.setRemoteDescription(
+     new RTCSessionDescription(s)
+    );
+
+    let ans=await peer.createAnswer();
+    await peer.setLocalDescription(ans);
+   }
+
+   else if(s.type==="answer"){
+    await peer.setRemoteDescription(
+     new RTCSessionDescription(s)
+    );
+   }
+
+   info.innerText="Connecting...";
+  }
+ );
+
+}
+
+// auto accept answer via QR (host side)
+window.addEventListener("load", async ()=>{
+ if(location.hash){
+  let s=decode(location.hash.substring(1));
+
+  if(s.type==="answer"){
+   await peer.setRemoteDescription(
+    new RTCSessionDescription(s)
+   );
+
+   info.innerText="Connected!";
+  }
+ }
+});
+
+</script>
+
+</body>
+</html>
