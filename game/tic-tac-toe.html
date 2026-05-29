@@ -327,7 +327,7 @@ const rtcConfig = {
 };
 
 // =====================================================
-// ENCODE / DECODE
+// ENCODE
 // =====================================================
 
 function encode(desc){
@@ -341,17 +341,26 @@ function encode(desc){
         .compressToEncodedURIComponent(tiny);
 }
 
+// =====================================================
+// DECODE
+// =====================================================
+
 function decode(str){
 
     const json =
         LZString
         .decompressFromEncodedURIComponent(str);
 
-    return JSON.parse(json);
+    const obj = JSON.parse(json);
+
+    return {
+        type: obj.t || obj.type,
+        sdp: obj.s || obj.sdp
+    };
 }
 
 // =====================================================
-// QR
+// SHOW QR
 // =====================================================
 
 async function showQR(canvasId,text){
@@ -440,27 +449,28 @@ async function pasteSignal(){
 
         const desc = decode(text);
 
-        // =============================================
-        // GUEST
-        // =============================================
+        console.log(desc);
 
-        if(desc.t === "offer" || desc.type === "offer"){
+        // =========================================
+        // OFFER -> guest
+        // =========================================
+
+        if(desc.type === "offer"){
 
             myRole = "O";
 
             peer =
                 new RTCPeerConnection(rtcConfig);
 
+            peer.ondatachannel = e => {
+                setupDC(e.channel);
+            };
+
             peer.onconnectionstatechange = ()=>{
 
                 info.innerText =
                     "State: " +
                     peer.connectionState;
-            };
-
-            peer.ondatachannel = e => {
-
-                setupDC(e.channel);
             };
 
             peer.onicecandidate =
@@ -483,14 +493,14 @@ async function pasteSignal(){
                     );
 
                     info.innerText =
-                        "Invia answer";
+                        "Invia answer all'host";
                 }
             };
 
             await peer.setRemoteDescription(
                 new RTCSessionDescription({
                     type:"offer",
-                    sdp:desc.s
+                    sdp:desc.sdp
                 })
             );
 
@@ -498,30 +508,34 @@ async function pasteSignal(){
                 await peer.createAnswer();
 
             await peer.setLocalDescription(answer);
+
+            return;
         }
 
-        // =============================================
-        // HOST
-        // =============================================
+        // =========================================
+        // ANSWER -> host
+        // =========================================
 
-        else{
+        if(desc.type === "answer"){
 
             await peer.setRemoteDescription(
                 new RTCSessionDescription({
                     type:"answer",
-                    sdp:desc.s
+                    sdp:desc.sdp
                 })
             );
 
             info.innerText =
                 "Connecting...";
+
+            return;
         }
 
     }catch(err){
 
         console.log(err);
 
-        alert("Errore connessione");
+        alert("Errore");
     }
 }
 
