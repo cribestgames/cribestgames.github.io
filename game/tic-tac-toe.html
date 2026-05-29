@@ -6,12 +6,6 @@
 
 <title>Tic Tac Toe</title>
 
-<!-- QR -->
-<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-
-<!-- Compression -->
-<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
-
 <style>
 
 body{
@@ -28,7 +22,7 @@ body{
 
 .container{
     width:100%;
-    max-width:500px;
+    max-width:550px;
     text-align:center;
 }
 
@@ -51,7 +45,7 @@ body{
     user-select:none;
 }
 
-button,select,textarea{
+button,input,select{
     padding:10px;
     border:none;
     border-radius:10px;
@@ -65,31 +59,35 @@ button{
     cursor:pointer;
 }
 
-textarea{
+input{
     width:100%;
-    min-height:120px;
-    resize:vertical;
     box-sizing:border-box;
     background:#1e293b;
     color:white;
 }
 
-canvas{
-    max-width:100%;
+.room{
+    background:#1e293b;
+    padding:12px;
+    border-radius:12px;
     margin-top:10px;
-    background:white;
-    border-radius:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
-#info{
+#status{
     margin-top:15px;
+    color:#94a3b8;
     font-size:18px;
 }
 
-#p2pHint{
-    margin-top:10px;
-    color:#94a3b8;
-    font-size:14px;
+#rooms{
+    margin-top:20px;
+}
+
+.hidden{
+    display:none;
 }
 
 </style>
@@ -102,48 +100,41 @@ canvas{
 <h1>Tic Tac Toe</h1>
 
 <select id="mode">
-    <option value="friend">Local</option>
+    <option value="local">Local</option>
     <option value="bot">Bot</option>
-    <option value="p2p">Online (QR code)</option>
+    <option value="lan">LAN / Same WiFi</option>
 </select>
 
 <button onclick="resetGame()">
     Reset
 </button>
 
-<div class="board" id="board"></div>
+<!-- LAN UI -->
 
-<div id="info">
+<div id="lanPanel" class="hidden">
+
+    <input
+        id="roomInput"
+        placeholder="Nome stanza"
+    />
+
+    <button onclick="createRoom()">
+        Crea Stanza
+    </button>
+
+    <button onclick="loadRooms()">
+        Aggiorna
+    </button>
+
+    <div id="rooms"></div>
+
+</div>
+
+<div id="status">
     Player X turn
 </div>
 
-<div id="p2p" style="display:none;">
-
-    <button onclick="createRoom()">
-        Create Room
-    </button>
-
-    <canvas id="qr"></canvas>
-
-    <canvas
-        id="qrAnswer"
-        style="display:none">
-    </canvas>
-
-    <div id="p2pHint"></div>
-
-    <textarea
-        id="signalData"
-        placeholder="Incolla qui offer / answer">
-    </textarea>
-
-    <br>
-
-    <button onclick="pasteSignal()">
-        Connect
-    </button>
-
-</div>
+<div class="board" id="board"></div>
 
 </div>
 
@@ -159,8 +150,6 @@ let turn = "X";
 
 let over = false;
 
-let myRole = null;
-
 const wins = [
     [0,1,2],
     [3,4,5],
@@ -172,34 +161,41 @@ const wins = [
     [2,4,6]
 ];
 
-const elBoard =
+const boardEl =
     document.getElementById("board");
 
-const info =
-    document.getElementById("info");
+const statusEl =
+    document.getElementById("status");
 
-const mode =
+const modeEl =
     document.getElementById("mode");
 
-const p2pDiv =
-    document.getElementById("p2p");
+const lanPanel =
+    document.getElementById("lanPanel");
 
-const hint =
-    document.getElementById("p2pHint");
+modeEl.onchange = ()=>{
 
-mode.onchange = ()=>{
+    if(modeEl.value === "lan"){
 
-    p2pDiv.style.display =
-        mode.value === "p2p"
-            ? "block"
-            : "none";
+        lanPanel.classList.remove("hidden");
+
+        loadRooms();
+
+    }else{
+
+        lanPanel.classList.add("hidden");
+    }
 
     resetGame();
 };
 
+// =====================================================
+// DRAW
+// =====================================================
+
 function drawBoard(){
 
-    elBoard.innerHTML = "";
+    boardEl.innerHTML = "";
 
     board.forEach((value,index)=>{
 
@@ -210,24 +206,29 @@ function drawBoard(){
 
         cell.innerText = value;
 
-        cell.onclick = ()=>makeMove(index);
+        cell.onclick = ()=>move(index);
 
-        elBoard.appendChild(cell);
+        boardEl.appendChild(cell);
     });
 }
 
-function makeMove(index){
+drawBoard();
+
+// =====================================================
+// MOVE
+// =====================================================
+
+function move(index){
 
     if(over) return;
 
     if(board[index]) return;
 
-    if(mode.value === "p2p"){
+    // ================= LAN =================
 
-        if(!dc || dc.readyState !== "open")
-            return;
+    if(modeEl.value === "lan"){
 
-        if(turn !== myRole)
+        if(turn !== myPlayer)
             return;
     }
 
@@ -237,23 +238,24 @@ function makeMove(index){
 
     if(checkWinner(turn)){
 
-        info.innerText =
+        statusEl.innerText =
             turn + " wins!";
 
         over = true;
 
-        sendMove(index, board[index]);
+        saveRoom();
 
         return;
     }
 
     if(board.every(v=>v)){
 
-        info.innerText = "Draw!";
+        statusEl.innerText =
+            "Draw!";
 
         over = true;
 
-        sendMove(index, board[index]);
+        saveRoom();
 
         return;
     }
@@ -263,16 +265,22 @@ function makeMove(index){
             ? "O"
             : "X";
 
-    info.innerText =
+    statusEl.innerText =
         "Player " + turn + " turn";
 
-    if(mode.value === "bot" && turn === "O"){
+    // ================= BOT =================
+
+    if(modeEl.value === "bot" && turn === "O"){
 
         setTimeout(botMove,400);
     }
 
-    sendMove(index, board[index]);
+    saveRoom();
 }
+
+// =====================================================
+// CHECK WIN
+// =====================================================
 
 function checkWinner(player){
 
@@ -281,16 +289,24 @@ function checkWinner(player){
     );
 }
 
+// =====================================================
+// BOT
+// =====================================================
+
 function botMove(){
 
     const free = board
         .map((v,i)=>v ? null : i)
         .filter(v=>v!==null);
 
-    makeMove(
+    move(
         free[Math.random()*free.length|0]
     );
 }
+
+// =====================================================
+// RESET
+// =====================================================
 
 function resetGame(){
 
@@ -300,319 +316,219 @@ function resetGame(){
 
     over = false;
 
-    info.innerText =
+    statusEl.innerText =
         "Player X turn";
 
     drawBoard();
-}
 
-drawBoard();
+    if(modeEl.value === "lan"){
 
-// =====================================================
-// WEBRTC
-// =====================================================
-
-let peer;
-
-let dc;
-
-let isHost = false;
-
-const rtcConfig = {
-    iceServers:[
-        {
-            urls:"stun:stun.l.google.com:19302"
-        }
-    ]
-};
-
-// =====================================================
-// ENCODE
-// =====================================================
-
-function encode(desc){
-
-    const tiny = JSON.stringify({
-        t: desc.type,
-        s: desc.sdp
-    });
-
-    return LZString
-        .compressToEncodedURIComponent(tiny);
+        saveRoom();
+    }
 }
 
 // =====================================================
-// DECODE
+// LAN SYSTEM
 // =====================================================
 
-function decode(str){
+const ROOM_KEY = "ttt_rooms";
 
-    const json =
-        LZString
-        .decompressFromEncodedURIComponent(str);
+let roomId = null;
 
-    const obj = JSON.parse(json);
-
-    return {
-        type: obj.t || obj.type,
-        sdp: obj.s || obj.sdp
-    };
-}
-
-// =====================================================
-// SHOW QR
-// =====================================================
-
-async function showQR(canvasId,text){
-
-    const canvas =
-        document.getElementById(canvasId);
-
-    canvas.style.display = "block";
-
-    await QRCode.toCanvas(canvas,text,{
-        width:500,
-        margin:1,
-        errorCorrectionLevel:"L"
-    });
-
-    console.log("chars:",text.length);
-}
+let myPlayer = null;
 
 // =====================================================
 // CREATE ROOM
 // =====================================================
 
-async function createRoom(){
+function createRoom(){
 
-    isHost = true;
+    const name =
+        document
+        .getElementById("roomInput")
+        .value
+        .trim();
 
-    myRole = "X";
+    if(!name) return;
 
-    peer =
-        new RTCPeerConnection(rtcConfig);
+    const rooms =
+        JSON.parse(
+            localStorage.getItem(ROOM_KEY)
+            || "[]"
+        );
 
-    dc =
-        peer.createDataChannel("game");
+    const id =
+        Math.random()
+        .toString(36)
+        .slice(2);
 
-    setupDC(dc);
+    rooms.push({
+        id,
+        name,
+        board:Array(9).fill(""),
+        turn:"X",
+        over:false,
+        players:1
+    });
 
-    peer.onconnectionstatechange = ()=>{
+    localStorage.setItem(
+        ROOM_KEY,
+        JSON.stringify(rooms)
+    );
 
-        info.innerText =
-            "State: " +
-            peer.connectionState;
-    };
+    joinRoom(id,"X");
 
-    peer.onicecandidate =
-    async (event)=>{
-
-        if(!event.candidate){
-
-            const encoded = encode({
-                type:"offer",
-                sdp:peer.localDescription.sdp
-            });
-
-            document
-                .getElementById("signalData")
-                .value = encoded;
-
-            await showQR("qr", encoded);
-
-            info.innerText =
-                "Invia offer";
-        }
-    };
-
-    const offer =
-        await peer.createOffer();
-
-    await peer.setLocalDescription(offer);
+    loadRooms();
 }
 
 // =====================================================
-// PASTE SIGNAL
+// LOAD ROOMS
 // =====================================================
 
-async function pasteSignal(){
+function loadRooms(){
 
-    try{
+    const roomsEl =
+        document.getElementById("rooms");
 
-        const text =
-            document
-            .getElementById("signalData")
-            .value
-            .trim();
+    roomsEl.innerHTML = "";
 
-        if(!text) return;
+    const rooms =
+        JSON.parse(
+            localStorage.getItem(ROOM_KEY)
+            || "[]"
+        );
 
-        const desc = decode(text);
+    rooms.forEach(room=>{
 
-        console.log(desc);
-
-        // =========================================
-        // OFFER -> guest
-        // =========================================
-
-        if(desc.type === "offer"){
-
-            myRole = "O";
-
-            peer =
-                new RTCPeerConnection(rtcConfig);
-
-            peer.ondatachannel = e => {
-                setupDC(e.channel);
-            };
-
-            peer.onconnectionstatechange = ()=>{
-
-                info.innerText =
-                    "State: " +
-                    peer.connectionState;
-            };
-
-            peer.onicecandidate =
-            async (event)=>{
-
-                if(!event.candidate){
-
-                    const encoded = encode({
-                        type:"answer",
-                        sdp:peer.localDescription.sdp
-                    });
-
-                    document
-                        .getElementById("signalData")
-                        .value = encoded;
-
-                    await showQR(
-                        "qrAnswer",
-                        encoded
-                    );
-
-                    info.innerText =
-                        "Invia answer all'host";
-                }
-            };
-
-            await peer.setRemoteDescription(
-                new RTCSessionDescription({
-                    type:"offer",
-                    sdp:desc.sdp
-                })
-            );
-
-            const answer =
-                await peer.createAnswer();
-
-            await peer.setLocalDescription(answer);
-
+        if(room.players >= 2)
             return;
-        }
 
-        // =========================================
-        // ANSWER -> host
-        // =========================================
+        const div =
+            document.createElement("div");
 
-        if(desc.type === "answer"){
+        div.className = "room";
 
-            await peer.setRemoteDescription(
-                new RTCSessionDescription({
-                    type:"answer",
-                    sdp:desc.sdp
-                })
-            );
+        div.innerHTML = `
+            <span>${room.name}</span>
+            <button onclick="joinRoom('${room.id}','O')">
+                Join
+            </button>
+        `;
 
-            info.innerText =
-                "Connecting...";
+        roomsEl.appendChild(div);
+    });
+}
 
-            return;
-        }
+// =====================================================
+// JOIN ROOM
+// =====================================================
 
-    }catch(err){
+function joinRoom(id,player){
 
-        console.log(err);
+    roomId = id;
 
-        alert("Errore");
+    myPlayer = player;
+
+    const rooms =
+        JSON.parse(
+            localStorage.getItem(ROOM_KEY)
+            || "[]"
+        );
+
+    const room =
+        rooms.find(r=>r.id===id);
+
+    if(!room) return;
+
+    if(player === "O"){
+
+        room.players = 2;
     }
+
+    localStorage.setItem(
+        ROOM_KEY,
+        JSON.stringify(rooms)
+    );
+
+    board = room.board;
+
+    turn = room.turn;
+
+    over = room.over;
+
+    drawBoard();
+
+    statusEl.innerText =
+        "Sei " + myPlayer;
 }
 
 // =====================================================
-// DATA CHANNEL
+// SAVE ROOM
 // =====================================================
 
-function setupDC(channel){
+function saveRoom(){
 
-    dc = channel;
+    if(modeEl.value !== "lan")
+        return;
 
-    dc.onopen = ()=>{
+    if(!roomId)
+        return;
 
-        info.innerText =
-            "Connected! Sei " +
-            myRole;
+    const rooms =
+        JSON.parse(
+            localStorage.getItem(ROOM_KEY)
+            || "[]"
+        );
 
-        hint.innerText = "";
-    };
+    const room =
+        rooms.find(r=>r.id===roomId);
 
-    dc.onmessage = e => {
+    if(!room) return;
 
-        const msg =
-            JSON.parse(e.data);
+    room.board = board;
 
-        if(msg.type === "move"){
+    room.turn = turn;
 
-            board[msg.i] = msg.p;
+    room.over = over;
 
-            drawBoard();
-
-            if(checkWinner(msg.p)){
-
-                info.innerText =
-                    msg.p + " wins!";
-
-                over = true;
-
-                return;
-            }
-
-            if(board.every(v=>v)){
-
-                info.innerText =
-                    "Draw!";
-
-                over = true;
-
-                return;
-            }
-
-            turn =
-                msg.p === "X"
-                    ? "O"
-                    : "X";
-
-            info.innerText =
-                "Player " + turn + " turn";
-        }
-    };
+    localStorage.setItem(
+        ROOM_KEY,
+        JSON.stringify(rooms)
+    );
 }
 
 // =====================================================
-// SEND MOVE
+// AUTO SYNC
 // =====================================================
 
-function sendMove(i,p){
+setInterval(()=>{
 
-    if(dc && dc.readyState === "open"){
+    if(modeEl.value !== "lan")
+        return;
 
-        dc.send(JSON.stringify({
-            type:"move",
-            i,
-            p
-        }));
-    }
-}
+    if(!roomId)
+        return;
+
+    const rooms =
+        JSON.parse(
+            localStorage.getItem(ROOM_KEY)
+            || "[]"
+        );
+
+    const room =
+        rooms.find(r=>r.id===roomId);
+
+    if(!room) return;
+
+    board = room.board;
+
+    turn = room.turn;
+
+    over = room.over;
+
+    drawBoard();
+
+},500);
 
 </script>
 
