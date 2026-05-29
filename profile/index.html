@@ -116,8 +116,6 @@
         <span id="overlay-label"></span>
       </div>
     </div>
-    
-    <a class="back-btn" id="back-btn" href="/">← Home</a>
 
     <input type="file" id="file-input" accept=".png,.jpg,.jpeg" onchange="previewImage(event)">
     <p class="preview-badge" id="preview-badge"></p>
@@ -133,6 +131,8 @@
     <button id="btn-save" class="btn-save" onclick="updateProfile()"></button>
     <button id="btn-logout" onclick="logout()"></button>
   </div>
+
+  <a class="back-btn" id="back-btn" href="/">← Home</a>
 
   <script>
     const SUPABASE_URL = "https://ysffeiaeuuuhfxkwtumt.supabase.co";
