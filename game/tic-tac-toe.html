@@ -7,7 +7,7 @@
 <title>Tic Tac Toe</title>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <style>
 body{
@@ -480,39 +480,29 @@ async function startScan(){
 
 async function runScan(readerId, expected){
 
-    if(scanners[readerId]){
+    document.getElementById(readerId).innerHTML = "";
+
+    const scanner = new Html5QrcodeScanner(
+        readerId,
+        {
+            fps: 5,
+            qrbox: 250,
+            rememberLastUsedCamera: true,
+            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+        },
+        false
+    );
+
+    scanner.render(async (text)=>{
 
         try{
-            await scanners[readerId].stop();
-        }catch(e){}
-    }
-
-    const qr = new Html5Qrcode(readerId);
-
-    scanners[readerId] = qr;
-
-    qr.start(
-
-        { facingMode:"environment" },
-
-        {
-            fps:10,
-            qrbox:{
-                width:250,
-                height:250
-            },
-            aspectRatio:1,
-            disableFlip:false
-        },
-
-        async (text)=>{
-
-            await qr.stop();
 
             const desc = decode(text);
 
             if(desc.type !== expected)
                 return;
+
+            await scanner.clear();
 
             // ================= GUEST =================
 
@@ -523,9 +513,7 @@ async function runScan(readerId, expected){
                 peer = new RTCPeerConnection(cfg);
 
                 peer.ondatachannel = e => {
-
                     setupDC(e.channel);
-
                 };
 
                 peer.onicegatheringstatechange = async ()=>{
@@ -538,10 +526,7 @@ async function runScan(readerId, expected){
                         sdp:peer.localDescription.sdp
                     });
 
-                    await showQR(
-                        "qrAnswer",
-                        encoded
-                    );
+                    await showQR("qrAnswer", encoded);
 
                     hint.innerText =
                         "Mostra questo QR all'host";
@@ -554,8 +539,7 @@ async function runScan(readerId, expected){
                     new RTCSessionDescription(desc)
                 );
 
-                const answer =
-                    await peer.createAnswer();
+                const answer = await peer.createAnswer();
 
                 await peer.setLocalDescription(answer);
 
@@ -567,13 +551,16 @@ async function runScan(readerId, expected){
                     new RTCSessionDescription(desc)
                 );
 
-                info.innerText =
-                    "Connessione...";
+                info.innerText = "Connessione...";
             }
-        },
 
-        ()=>{}
-    );
+        }catch(err){
+
+            console.log(err);
+
+        }
+
+    });
 }
 
 // ======================================
