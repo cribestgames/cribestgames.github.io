@@ -145,6 +145,9 @@ let board = Array(9).fill("");
 
 let turn = "X";
 
+// alterna chi inizia
+let startingPlayer = "X";
+
 let over = false;
 
 let myRole = null;
@@ -332,22 +335,35 @@ function botMove(){
 
 function resetGame(){
 
+    // alterna chi inizia
+    startingPlayer =
+        startingPlayer === "X"
+            ? "O"
+            : "X";
+
     board = Array(9).fill("");
 
-    turn = "X";
+    turn = startingPlayer;
 
     over = false;
 
     drawBoard();
 
     statusEl.innerText =
-        "Player X turn";
+        "Player " + turn + " turn";
 
     if(conn && conn.open){
 
         conn.send({
-            type:"reset"
+            type:"reset",
+            starter: startingPlayer
         });
+    }
+
+    // bot inizia
+    if(modeEl.value === "bot" && turn === "O"){
+
+        setTimeout(botMove,400);
     }
 }
 
@@ -603,14 +619,22 @@ function setupConnection(){
 
             board = Array(9).fill("");
 
-            turn = "X";
+            startingPlayer = data.starter;
+
+            turn = startingPlayer;
 
             over = false;
 
             drawBoard();
 
             statusEl.innerText =
-                "New game";
+                "Player " + turn + " turn";
+
+            // bot
+            if(modeEl.value === "bot" && turn === "O"){
+
+                setTimeout(botMove,400);
+            }
 
             return;
         }
