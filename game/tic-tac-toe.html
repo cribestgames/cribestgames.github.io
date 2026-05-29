@@ -6,7 +6,7 @@
 
 <title>Tic Tac Toe</title>
 
-<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 
 <style>
 
@@ -109,8 +109,6 @@ input{
 <button onclick="resetGame()">
     Reset
 </button>
-
-<!-- ONLINE -->
 
 <div id="onlinePanel" class="hidden">
 
@@ -239,8 +237,6 @@ function move(index){
 
     if(board[index]) return;
 
-    // ONLINE CHECK
-
     if(modeEl.value === "online"){
 
         if(!conn || !conn.open){
@@ -293,8 +289,6 @@ function move(index){
 
     statusEl.innerText =
         "Player " + turn + " turn";
-
-    // BOT
 
     if(modeEl.value === "bot" && turn === "O"){
 
@@ -378,22 +372,20 @@ function hostRoom(){
 
     myRole = "X";
 
+    // =================================================
+    // PEER
+    // =================================================
+
     peer = new Peer(
-        "room-" + roomId,
-        {
-            host:"0.peerjs.com",
-            port:443,
-            secure:true,
-            debug:2
-        }
+        "room-" + roomId
     );
 
     peer.on("open",(id)=>{
 
-        console.log("HOST:",id);
+        console.log("HOST OPEN:",id);
 
         statusEl.innerText =
-            "Stanza creata: " + roomId;
+            "Stanza creata";
     });
 
     peer.on("connection",(connection)=>{
@@ -402,43 +394,24 @@ function hostRoom(){
 
         conn = connection;
 
+        setupConnection();
+
         conn.on("open",()=>{
 
             console.log("HOST CONNECTION OPEN");
-
-            turn = "X";
-
-            setupConnection();
 
             statusEl.innerText =
                 "Giocatore connesso!";
         });
 
-        conn.on("close",()=>{
-
-            console.log("HOST CONNECTION CLOSED");
-
-            statusEl.innerText =
-                "Connessione chiusa";
-        });
-
-        conn.on("error",(err)=>{
-
-            console.log("HOST ERROR:", err);
-
-            statusEl.innerText =
-                "Errore connessione";
-        });
     });
 
     peer.on("error",(err)=>{
 
-        console.log(err);
+        console.log("HOST ERROR:", err);
 
-        alert(
-            "Errore host: " +
-            err.type
-        );
+        statusEl.innerText =
+            "Errore host";
     });
 }
 
@@ -470,32 +443,24 @@ function joinRoom(){
     statusEl.innerText =
         "Connessione...";
 
-    peer = new Peer({
+    peer = new Peer();
 
-        host:"0.peerjs.com",
-        port:443,
-        secure:true,
-        debug:2
-    });
+    peer.on("open",(id)=>{
 
-    peer.on("open",()=>{
-
-        console.log("PEER OPEN");
+        console.log("CLIENT OPEN:",id);
 
         conn = peer.connect(
             "room-" + roomId,
             {
-                reliable:true
+                serialization:"json"
             }
         );
 
+        setupConnection();
+
         conn.on("open",()=>{
 
-            console.log("DATA OPEN");
-
-            turn = "X";
-
-            setupConnection();
+            console.log("CLIENT CONNECTION OPEN");
 
             statusEl.innerText =
                 "Connesso! Sei O";
@@ -505,17 +470,9 @@ function joinRoom(){
             });
         });
 
-        conn.on("close",()=>{
-
-            console.log("CLIENT CONNECTION CLOSED");
-
-            statusEl.innerText =
-                "Connessione chiusa";
-        });
-
         conn.on("error",(err)=>{
 
-            console.log("CLIENT ERROR:", err);
+            console.log("CONNECTION ERROR:", err);
 
             statusEl.innerText =
                 "Errore connessione";
@@ -525,7 +482,7 @@ function joinRoom(){
 
     peer.on("error",(err)=>{
 
-        console.log(err);
+        console.log("CLIENT ERROR:", err);
 
         statusEl.innerText =
             "Errore PeerJS";
@@ -636,6 +593,14 @@ function setupConnection(){
             statusEl.innerText =
                 "Player " + turn + " turn";
         }
+    });
+
+    conn.on("close",()=>{
+
+        console.log("CONNECTION CLOSED");
+
+        statusEl.innerText =
+            "Connessione chiusa";
     });
 }
 
