@@ -6,15 +6,22 @@
 
 <title>Tic Tac Toe</title>
 
+<!-- QR GENERATOR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+<!-- QR SCANNER -->
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
+<!-- COMPRESSION -->
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
+
 <style>
+
 body{
     margin:0;
-    font-family:Arial;
     background:#0f172a;
     color:white;
+    font-family:Arial;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -37,22 +44,22 @@ body{
 
 .cell{
     background:#1e293b;
+    border-radius:12px;
     aspect-ratio:1;
     display:flex;
     justify-content:center;
     align-items:center;
     font-size:60px;
     cursor:pointer;
-    border-radius:12px;
     user-select:none;
 }
 
-button, select{
+button,select{
     padding:10px;
-    border-radius:10px;
     border:none;
-    margin:5px;
+    border-radius:10px;
     font-size:16px;
+    margin:5px;
 }
 
 button{
@@ -62,13 +69,8 @@ button{
 }
 
 canvas{
-    margin-top:10px;
     max-width:100%;
-}
-
-#reader,
-#reader2{
-    margin-top:15px;
+    margin-top:10px;
 }
 
 #info{
@@ -81,6 +83,12 @@ canvas{
     color:#94a3b8;
     font-size:14px;
 }
+
+#reader,
+#reader2{
+    margin-top:15px;
+}
+
 </style>
 </head>
 
@@ -91,9 +99,9 @@ canvas{
 <h1>Tic Tac Toe</h1>
 
 <select id="mode">
-  <option value="friend">Local</option>
-  <option value="bot">Bot</option>
-  <option value="p2p">Online (QR code)</option>
+    <option value="friend">Local</option>
+    <option value="bot">Bot</option>
+    <option value="p2p">Online (QR code)</option>
 </select>
 
 <button onclick="resetGame()">Reset</button>
@@ -104,20 +112,27 @@ canvas{
 
 <div id="p2p" style="display:none;">
 
-    <button onclick="createRoom()">Create Room</button>
-    <button onclick="startScan()">Scan QR</button>
+    <button onclick="createRoom()">
+        Create Room
+    </button>
 
-    <div>
-        <canvas id="qr"></canvas>
-    </div>
+    <button onclick="startScan()">
+        Scan QR
+    </button>
 
-    <div>
-        <canvas id="qrAnswer" style="display:none"></canvas>
-    </div>
+    <br>
+
+    <canvas id="qr"></canvas>
+
+    <canvas
+        id="qrAnswer"
+        style="display:none">
+    </canvas>
 
     <div id="p2pHint"></div>
 
     <div id="reader"></div>
+
     <div id="reader2"></div>
 
 </div>
@@ -126,33 +141,41 @@ canvas{
 
 <script>
 
-// ======================================
+// =====================================================
 // GAME
-// ======================================
+// =====================================================
 
 let board = Array(9).fill("");
+
 let turn = "X";
+
 let over = false;
+
 let myRole = null;
 
 const wins = [
-  [0,1,2],
-  [3,4,5],
-  [6,7,8],
-  [0,3,6],
-  [1,4,7],
-  [2,5,8],
-  [0,4,8],
-  [2,4,6]
+    [0,1,2],
+    [3,4,5],
+    [6,7,8],
+    [0,3,6],
+    [1,4,7],
+    [2,5,8],
+    [0,4,8],
+    [2,4,6]
 ];
 
 const elBoard = document.getElementById("board");
+
 const info = document.getElementById("info");
+
 const mode = document.getElementById("mode");
+
 const p2pDiv = document.getElementById("p2p");
+
 const hint = document.getElementById("p2pHint");
 
-mode.onchange = () => {
+mode.onchange = ()=>{
+
     p2pDiv.style.display =
         mode.value === "p2p"
             ? "block"
@@ -170,19 +193,19 @@ function drawBoard(){
         const cell = document.createElement("div");
 
         cell.className = "cell";
+
         cell.innerText = value;
 
         cell.onclick = ()=>makeMove(index);
 
         elBoard.appendChild(cell);
-
     });
-
 }
 
 function makeMove(index){
 
     if(over) return;
+
     if(board[index]) return;
 
     if(mode.value === "p2p"){
@@ -201,6 +224,7 @@ function makeMove(index){
     if(checkWinner(turn)){
 
         info.innerText = turn + " wins!";
+
         over = true;
 
         sendMove(index, board[index]);
@@ -211,6 +235,7 @@ function makeMove(index){
     if(board.every(v=>v)){
 
         info.innerText = "Draw!";
+
         over = true;
 
         sendMove(index, board[index]);
@@ -218,16 +243,17 @@ function makeMove(index){
         return;
     }
 
-    turn = turn === "X"
-        ? "O"
-        : "X";
+    turn =
+        turn === "X"
+            ? "O"
+            : "X";
 
-    info.innerText = "Player " + turn + " turn";
+    info.innerText =
+        "Player " + turn + " turn";
 
     if(mode.value === "bot" && turn === "O"){
 
         setTimeout(botMove,400);
-
     }
 
     sendMove(index, board[index]);
@@ -242,46 +268,12 @@ function checkWinner(player){
 
 function botMove(){
 
-    for(let i=0;i<9;i++){
-
-        if(!board[i]){
-
-            board[i] = "O";
-
-            if(checkWinner("O")){
-
-                board[i] = "";
-                makeMove(i);
-                return;
-            }
-
-            board[i] = "";
-        }
-    }
-
-    for(let i=0;i<9;i++){
-
-        if(!board[i]){
-
-            board[i] = "X";
-
-            if(checkWinner("X")){
-
-                board[i] = "";
-                makeMove(i);
-                return;
-            }
-
-            board[i] = "";
-        }
-    }
-
     const free = board
         .map((v,i)=>v ? null : i)
         .filter(v=>v!==null);
 
     makeMove(
-        free[Math.random() * free.length | 0]
+        free[Math.random()*free.length|0]
     );
 }
 
@@ -290,6 +282,7 @@ function resetGame(){
     board = Array(9).fill("");
 
     turn = "X";
+
     over = false;
 
     info.innerText = "Player X turn";
@@ -299,15 +292,15 @@ function resetGame(){
 
 drawBoard();
 
-// ======================================
-// P2P WEBRTC
-// ======================================
+// =====================================================
+// WEBRTC
+// =====================================================
 
 let peer;
-let dc;
-let isHost = false;
 
-const scanners = {};
+let dc;
+
+let isHost = false;
 
 const cfg = {
     iceServers:[
@@ -317,114 +310,58 @@ const cfg = {
     ]
 };
 
-// ======================================
-// COMPRESSION
-// ======================================
-
-function compress(str){
-
-    return btoa(
-        unescape(
-            encodeURIComponent(str)
-        )
-    );
-}
-
-function decompress(str){
-
-    return decodeURIComponent(
-        escape(
-            atob(str)
-        )
-    );
-}
-
-// ======================================
-// SMALL SDP
-// ======================================
-
-function minimalSDP(sdp){
-
-    return sdp
-        .split("\n")
-        .filter(line =>
-
-            line.startsWith("v=") ||
-            line.startsWith("o=") ||
-            line.startsWith("s=") ||
-            line.startsWith("t=") ||
-            line.startsWith("a=group") ||
-            line.startsWith("m=") ||
-            line.startsWith("c=") ||
-            line.startsWith("a=mid") ||
-            line.startsWith("a=sendrecv") ||
-            line.startsWith("a=ice-ufrag") ||
-            line.startsWith("a=ice-pwd") ||
-            line.startsWith("a=fingerprint") ||
-            line.startsWith("a=setup") ||
-            line.startsWith("a=sctp-port") ||
-            line.startsWith("a=max-message-size") ||
-            line.startsWith("a=candidate:")
-        )
-        .join("\n");
-}
-
-// ======================================
+// =====================================================
 // ENCODE / DECODE
-// ======================================
+// =====================================================
 
 function encode(desc){
 
-    return compress(
-        JSON.stringify({
-            t: desc.type[0],
-            s: minimalSDP(desc.sdp)
-        })
-    );
+    const tiny = JSON.stringify({
+        t: desc.type,
+        s: desc.sdp
+    });
+
+    return LZString
+        .compressToEncodedURIComponent(tiny);
 }
 
 function decode(str){
 
-    const obj = JSON.parse(
-        decompress(str)
-    );
+    const json =
+        LZString
+        .decompressFromEncodedURIComponent(str);
 
-    return {
-        type:
-            obj.t === "o"
-                ? "offer"
-                : "answer",
-
-        sdp: obj.s
-    };
+    return JSON.parse(json);
 }
 
-// ======================================
-// QR
-// ======================================
+// =====================================================
+// SHOW QR
+// =====================================================
 
 async function showQR(canvasId, text){
 
-    const canvas = document.getElementById(canvasId);
+    const canvas =
+        document.getElementById(canvasId);
 
     canvas.style.display = "block";
 
     await QRCode.toCanvas(canvas, text, {
-        width: 380,
-        margin: 2,
-        errorCorrectionLevel: "M"
+        width:500,
+        margin:1,
+        errorCorrectionLevel:"L"
     });
 
-    console.log("QR length:", text.length);
+    console.log("QR chars:", text.length);
 }
 
-// ======================================
-// HOST
-// ======================================
+// =====================================================
+// CREATE ROOM
+// =====================================================
 
 async function createRoom(){
 
     isHost = true;
+
     myRole = "X";
 
     peer = new RTCPeerConnection(cfg);
@@ -433,7 +370,8 @@ async function createRoom(){
 
     setupDC(dc);
 
-    peer.onicegatheringstatechange = async ()=>{
+    peer.onicegatheringstatechange =
+    async ()=>{
 
         if(peer.iceGatheringState !== "complete")
             return;
@@ -445,26 +383,26 @@ async function createRoom(){
 
         await showQR("qr", encoded);
 
-        hint.innerText =
-            "1) Fai scansionare questo QR all'amico\n" +
-            "2) Poi premi Scan QR per leggere il suo";
-
         info.innerText =
-            "Aspetta l'altro giocatore...";
+            "Aspetta l'altro giocatore";
+
+        hint.innerText =
+            "Fai scansionare il QR";
     };
 
-    const offer = await peer.createOffer();
+    const offer =
+        await peer.createOffer();
 
     await peer.setLocalDescription(offer);
 }
 
-// ======================================
+// =====================================================
 // START SCAN
-// ======================================
+// =====================================================
 
 async function startScan(){
 
-    if(isHost && peer){
+    if(isHost){
 
         runScan("reader2","answer");
 
@@ -474,24 +412,25 @@ async function startScan(){
     }
 }
 
-// ======================================
-// SCANNER
-// ======================================
+// =====================================================
+// SCAN
+// =====================================================
 
 async function runScan(readerId, expected){
 
-    document.getElementById(readerId).innerHTML = "";
+    document.getElementById(readerId)
+        .innerHTML = "";
 
-    const scanner = new Html5QrcodeScanner(
-        readerId,
-        {
-            fps: 5,
-            qrbox: 250,
-            rememberLastUsedCamera: true,
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
-        },
-        false
-    );
+    const scanner =
+        new Html5QrcodeScanner(
+            readerId,
+            {
+                fps:5,
+                qrbox:250,
+                rememberLastUsedCamera:true
+            },
+            false
+        );
 
     scanner.render(async (text)=>{
 
@@ -504,19 +443,24 @@ async function runScan(readerId, expected){
 
             await scanner.clear();
 
-            // ================= GUEST =================
+            // =========================================
+            // GUEST
+            // =========================================
 
             if(expected === "offer"){
 
                 myRole = "O";
 
-                peer = new RTCPeerConnection(cfg);
+                peer =
+                    new RTCPeerConnection(cfg);
 
                 peer.ondatachannel = e => {
+
                     setupDC(e.channel);
                 };
 
-                peer.onicegatheringstatechange = async ()=>{
+                peer.onicegatheringstatechange =
+                async ()=>{
 
                     if(peer.iceGatheringState !== "complete")
                         return;
@@ -526,46 +470,52 @@ async function runScan(readerId, expected){
                         sdp:peer.localDescription.sdp
                     });
 
-                    await showQR("qrAnswer", encoded);
-
-                    hint.innerText =
-                        "Mostra questo QR all'host";
+                    await showQR(
+                        "qrAnswer",
+                        encoded
+                    );
 
                     info.innerText =
-                        "Aspetta connessione...";
+                        "Mostra il QR all'host";
+
+                    hint.innerText =
+                        "Host deve scannerizzare";
                 };
 
                 await peer.setRemoteDescription(
                     new RTCSessionDescription(desc)
                 );
 
-                const answer = await peer.createAnswer();
+                const answer =
+                    await peer.createAnswer();
 
                 await peer.setLocalDescription(answer);
 
             }else{
 
-                // ================= HOST =================
+                // =====================================
+                // HOST
+                // =====================================
 
                 await peer.setRemoteDescription(
                     new RTCSessionDescription(desc)
                 );
 
-                info.innerText = "Connessione...";
+                info.innerText =
+                    "Connessione...";
             }
 
         }catch(err){
 
             console.log(err);
-
         }
 
     });
 }
 
-// ======================================
+// =====================================================
 // DATA CHANNEL
-// ======================================
+// =====================================================
 
 function setupDC(channel){
 
@@ -581,7 +531,8 @@ function setupDC(channel){
 
     dc.onmessage = e => {
 
-        const msg = JSON.parse(e.data);
+        const msg =
+            JSON.parse(e.data);
 
         if(msg.type === "move"){
 
@@ -601,7 +552,8 @@ function setupDC(channel){
 
             if(board.every(v=>v)){
 
-                info.innerText = "Draw!";
+                info.innerText =
+                    "Draw!";
 
                 over = true;
 
@@ -619,21 +571,19 @@ function setupDC(channel){
     };
 }
 
-// ======================================
+// =====================================================
 // SEND MOVE
-// ======================================
+// =====================================================
 
 function sendMove(i,p){
 
     if(dc && dc.readyState === "open"){
 
-        dc.send(
-            JSON.stringify({
-                type:"move",
-                i,
-                p
-            })
-        );
+        dc.send(JSON.stringify({
+            type:"move",
+            i,
+            p
+        }));
     }
 }
 
