@@ -442,7 +442,11 @@ function joinRoom(){
 
     myRole = "O";
 
+    statusEl.innerText =
+        "Connessione...";
+
     peer = new Peer({
+
         host:"0.peerjs.com",
         port:443,
         secure:true,
@@ -450,6 +454,8 @@ function joinRoom(){
     });
 
     peer.on("open",()=>{
+
+        console.log("PEER OPEN");
 
         conn = peer.connect(
             "room-" + roomId,
@@ -460,32 +466,44 @@ function joinRoom(){
 
         conn.on("open",()=>{
 
-            turn = "X";
+            console.log("DATA OPEN");
 
-            console.log("CONNECTED");
+            turn = "X";
 
             setupConnection();
 
             statusEl.innerText =
                 "Connesso! Sei O";
+
+            // IMPORTANTISSIMO
+            // forza sync iniziale
+
+            conn.send({
+                type:"syncRequest"
+            });
+        });
+
+        conn.on("data",(data)=>{
+
+            console.log(data);
         });
 
         conn.on("error",(err)=>{
 
             console.log(err);
 
-            alert("Conn error");
+            statusEl.innerText =
+                "Errore connessione";
         });
+
     });
 
     peer.on("error",(err)=>{
 
         console.log(err);
 
-        alert(
-            "Errore join: " +
-            err.type
-        );
+        statusEl.innerText =
+            "Errore PeerJS";
     });
 }
 
@@ -494,6 +512,30 @@ function joinRoom(){
 // =====================================================
 
 function setupConnection(){
+    if(data.type === "syncRequest"){
+
+    conn.send({
+        type:"syncState",
+        board,
+        turn,
+        over
+    });
+
+    return;
+}
+
+if(data.type === "syncState"){
+
+    board = data.board;
+
+    turn = data.turn;
+
+    over = data.over;
+
+    drawBoard();
+
+    return;
+}
 
     conn.on("data",(data)=>{
 
