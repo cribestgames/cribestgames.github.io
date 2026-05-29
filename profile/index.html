@@ -16,6 +16,15 @@
       align-items: center;
       height: 100vh;
     }
+    .back-btn {
+      color: rgba(255,255,255,0.7);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+
+    .back-btn:hover { color: white; }
+    
     .profile-box {
       width: 340px;
       padding: 35px;
@@ -107,6 +116,8 @@
         <span id="overlay-label"></span>
       </div>
     </div>
+    
+    <a class="back-btn" id="back-btn" href="/">← Home</a>
 
     <input type="file" id="file-input" accept=".png,.jpg,.jpeg" onchange="previewImage(event)">
     <p class="preview-badge" id="preview-badge"></p>
