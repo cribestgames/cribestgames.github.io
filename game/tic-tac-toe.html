@@ -6,13 +6,10 @@
 
 <title>Tic Tac Toe</title>
 
-<!-- QR GENERATOR -->
+<!-- QR -->
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 
-<!-- QR SCANNER -->
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
-<!-- COMPRESSION -->
+<!-- Compression -->
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js"></script>
 
 <style>
@@ -54,7 +51,7 @@ body{
     user-select:none;
 }
 
-button,select{
+button,select,textarea{
     padding:10px;
     border:none;
     border-radius:10px;
@@ -68,9 +65,20 @@ button{
     cursor:pointer;
 }
 
+textarea{
+    width:100%;
+    min-height:120px;
+    resize:vertical;
+    box-sizing:border-box;
+    background:#1e293b;
+    color:white;
+}
+
 canvas{
     max-width:100%;
     margin-top:10px;
+    background:white;
+    border-radius:10px;
 }
 
 #info{
@@ -82,11 +90,6 @@ canvas{
     margin-top:10px;
     color:#94a3b8;
     font-size:14px;
-}
-
-#reader,
-#reader2{
-    margin-top:15px;
 }
 
 </style>
@@ -104,23 +107,21 @@ canvas{
     <option value="p2p">Online (QR code)</option>
 </select>
 
-<button onclick="resetGame()">Reset</button>
+<button onclick="resetGame()">
+    Reset
+</button>
 
 <div class="board" id="board"></div>
 
-<div id="info">Player X turn</div>
+<div id="info">
+    Player X turn
+</div>
 
 <div id="p2p" style="display:none;">
 
     <button onclick="createRoom()">
         Create Room
     </button>
-
-    <button onclick="startScan()">
-        Scan QR
-    </button>
-
-    <br>
 
     <canvas id="qr"></canvas>
 
@@ -131,9 +132,16 @@ canvas{
 
     <div id="p2pHint"></div>
 
-    <div id="reader"></div>
+    <textarea
+        id="signalData"
+        placeholder="Incolla qui offer / answer">
+    </textarea>
 
-    <div id="reader2"></div>
+    <br>
+
+    <button onclick="pasteSignal()">
+        Connect
+    </button>
 
 </div>
 
@@ -164,15 +172,20 @@ const wins = [
     [2,4,6]
 ];
 
-const elBoard = document.getElementById("board");
+const elBoard =
+    document.getElementById("board");
 
-const info = document.getElementById("info");
+const info =
+    document.getElementById("info");
 
-const mode = document.getElementById("mode");
+const mode =
+    document.getElementById("mode");
 
-const p2pDiv = document.getElementById("p2p");
+const p2pDiv =
+    document.getElementById("p2p");
 
-const hint = document.getElementById("p2pHint");
+const hint =
+    document.getElementById("p2pHint");
 
 mode.onchange = ()=>{
 
@@ -190,7 +203,8 @@ function drawBoard(){
 
     board.forEach((value,index)=>{
 
-        const cell = document.createElement("div");
+        const cell =
+            document.createElement("div");
 
         cell.className = "cell";
 
@@ -223,7 +237,8 @@ function makeMove(index){
 
     if(checkWinner(turn)){
 
-        info.innerText = turn + " wins!";
+        info.innerText =
+            turn + " wins!";
 
         over = true;
 
@@ -285,7 +300,8 @@ function resetGame(){
 
     over = false;
 
-    info.innerText = "Player X turn";
+    info.innerText =
+        "Player X turn";
 
     drawBoard();
 }
@@ -302,7 +318,7 @@ let dc;
 
 let isHost = false;
 
-const cfg = {
+const rtcConfig = {
     iceServers:[
         {
             urls:"stun:stun.l.google.com:19302"
@@ -335,23 +351,23 @@ function decode(str){
 }
 
 // =====================================================
-// SHOW QR
+// QR
 // =====================================================
 
-async function showQR(canvasId, text){
+async function showQR(canvasId,text){
 
     const canvas =
         document.getElementById(canvasId);
 
     canvas.style.display = "block";
 
-    await QRCode.toCanvas(canvas, text, {
+    await QRCode.toCanvas(canvas,text,{
         width:500,
         margin:1,
         errorCorrectionLevel:"L"
     });
 
-    console.log("QR chars:", text.length);
+    console.log("chars:",text.length);
 }
 
 // =====================================================
@@ -364,30 +380,40 @@ async function createRoom(){
 
     myRole = "X";
 
-    peer = new RTCPeerConnection(cfg);
+    peer =
+        new RTCPeerConnection(rtcConfig);
 
-    dc = peer.createDataChannel("game");
+    dc =
+        peer.createDataChannel("game");
 
     setupDC(dc);
 
-    peer.onicegatheringstatechange =
-    async ()=>{
-
-        if(peer.iceGatheringState !== "complete")
-            return;
-
-        const encoded = encode({
-            type:"offer",
-            sdp:peer.localDescription.sdp
-        });
-
-        await showQR("qr", encoded);
+    peer.onconnectionstatechange = ()=>{
 
         info.innerText =
-            "Aspetta l'altro giocatore";
+            "State: " +
+            peer.connectionState;
+    };
 
-        hint.innerText =
-            "Fai scansionare il QR";
+    peer.onicecandidate =
+    async (event)=>{
+
+        if(!event.candidate){
+
+            const encoded = encode({
+                type:"offer",
+                sdp:peer.localDescription.sdp
+            });
+
+            document
+                .getElementById("signalData")
+                .value = encoded;
+
+            await showQR("qr", encoded);
+
+            info.innerText =
+                "Invia offer";
+        }
     };
 
     const offer =
@@ -397,78 +423,59 @@ async function createRoom(){
 }
 
 // =====================================================
-// START SCAN
+// PASTE SIGNAL
 // =====================================================
 
-async function startScan(){
+async function pasteSignal(){
 
-    if(isHost){
+    try{
 
-        runScan("reader2","answer");
+        const text =
+            document
+            .getElementById("signalData")
+            .value
+            .trim();
 
-    }else{
+        if(!text) return;
 
-        runScan("reader","offer");
-    }
-}
+        const desc = decode(text);
 
-// =====================================================
-// SCAN
-// =====================================================
+        // =============================================
+        // GUEST
+        // =============================================
 
-async function runScan(readerId, expected){
+        if(desc.t === "offer" || desc.type === "offer"){
 
-    document.getElementById(readerId)
-        .innerHTML = "";
+            myRole = "O";
 
-    const scanner =
-        new Html5QrcodeScanner(
-            readerId,
-            {
-                fps:5,
-                qrbox:250,
-                rememberLastUsedCamera:true
-            },
-            false
-        );
+            peer =
+                new RTCPeerConnection(rtcConfig);
 
-    scanner.render(async (text)=>{
+            peer.onconnectionstatechange = ()=>{
 
-        try{
+                info.innerText =
+                    "State: " +
+                    peer.connectionState;
+            };
 
-            const desc = decode(text);
+            peer.ondatachannel = e => {
 
-            if(desc.type !== expected)
-                return;
+                setupDC(e.channel);
+            };
 
-            await scanner.clear();
+            peer.onicecandidate =
+            async (event)=>{
 
-            // =========================================
-            // GUEST
-            // =========================================
-
-            if(expected === "offer"){
-
-                myRole = "O";
-
-                peer =
-                    new RTCPeerConnection(cfg);
-
-                peer.ondatachannel = e => {
-
-                    setupDC(e.channel);
-                };
-
-                peer.onicegatheringstatechange =
-                async ()=>{
-
-                    if(peer.iceGatheringState !== "complete")
-                        return;
+                if(!event.candidate){
 
                     const encoded = encode({
                         type:"answer",
                         sdp:peer.localDescription.sdp
                     });
+
+                    document
+                        .getElementById("signalData")
+                        .value = encoded;
 
                     await showQR(
                         "qrAnswer",
@@ -476,41 +483,46 @@ async function runScan(readerId, expected){
                     );
 
                     info.innerText =
-                        "Mostra il QR all'host";
+                        "Invia answer";
+                }
+            };
 
-                    hint.innerText =
-                        "Host deve scannerizzare";
-                };
+            await peer.setRemoteDescription(
+                new RTCSessionDescription({
+                    type:"offer",
+                    sdp:desc.s
+                })
+            );
 
-                await peer.setRemoteDescription(
-                    new RTCSessionDescription(desc)
-                );
+            const answer =
+                await peer.createAnswer();
 
-                const answer =
-                    await peer.createAnswer();
-
-                await peer.setLocalDescription(answer);
-
-            }else{
-
-                // =====================================
-                // HOST
-                // =====================================
-
-                await peer.setRemoteDescription(
-                    new RTCSessionDescription(desc)
-                );
-
-                info.innerText =
-                    "Connessione...";
-            }
-
-        }catch(err){
-
-            console.log(err);
+            await peer.setLocalDescription(answer);
         }
 
-    });
+        // =============================================
+        // HOST
+        // =============================================
+
+        else{
+
+            await peer.setRemoteDescription(
+                new RTCSessionDescription({
+                    type:"answer",
+                    sdp:desc.s
+                })
+            );
+
+            info.innerText =
+                "Connecting...";
+        }
+
+    }catch(err){
+
+        console.log(err);
+
+        alert("Errore connessione");
+    }
 }
 
 // =====================================================
@@ -524,7 +536,8 @@ function setupDC(channel){
     dc.onopen = ()=>{
 
         info.innerText =
-            "Connessi! Sei " + myRole;
+            "Connected! Sei " +
+            myRole;
 
         hint.innerText = "";
     };
