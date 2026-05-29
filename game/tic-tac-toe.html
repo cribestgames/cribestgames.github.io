@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
 <title>Tic Tac Toe</title>
-
 <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode"></script>
-
 <style>
 body{
     margin:0;
@@ -21,20 +18,17 @@ body{
     min-height:100vh;
     padding:20px;
 }
-
 .container{
     width:100%;
     max-width:500px;
     text-align:center;
 }
-
 .board{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     gap:10px;
     margin-top:20px;
 }
-
 .cell{
     background:#1e293b;
     aspect-ratio:1;
@@ -45,7 +39,6 @@ body{
     cursor:pointer;
     border-radius:12px;
 }
-
 button, select{
     padding:10px;
     border-radius:10px;
@@ -53,27 +46,17 @@ button, select{
     margin:5px;
     font-size:16px;
 }
-
 button{ background:#2563eb; color:white; cursor:pointer; }
-
 textarea{
     width:100%;
     height:90px;
     margin-top:10px;
 }
-
-#reader{
-    margin-top:10px;
-}
-
-canvas{
-    margin-top:10px;
-}
+#reader{ margin-top:10px; }
+canvas{ margin-top:10px; }
 </style>
 </head>
-
 <body>
-
 <div class="container">
 
 <h1>Tic Tac Toe</h1>
@@ -87,31 +70,20 @@ canvas{
 <button onclick="reset()">Reset</button>
 
 <div class="board" id="board"></div>
-
 <div id="info">Player X turn</div>
 
 <!-- P2P -->
 <div id="p2p" style="display:none;">
-
-<button onclick="createRoom()">Create Room</button>
-<button onclick="startScan()">Scan QR</button>
-
-<!-- Host QR (offer) -->
-<canvas id="qr"></canvas>
-
-<!-- Guest QR (answer) — shown after guest scans offer -->
-<canvas id="qrAnswer" style="display:none"></canvas>
-
-<!-- Step label -->
-<div id="p2pStep" style="margin-top:8px;font-size:14px;color:#94a3b8"></div>
-
-<div id="reader"></div>
-<div id="reader2"></div>
-
+  <button onclick="createRoom()">Create Room</button>
+  <button onclick="startScan()">Scan QR</button>
+  <canvas id="qr"></canvas>
+  <canvas id="qrAnswer" style="display:none"></canvas>
+  <div id="p2pHint" style="font-size:13px;color:#94a3b8;margin-top:6px"></div>
+  <div id="reader"></div>
+  <div id="reader2"></div>
 </div>
 
 </div>
-
 <script>
 
 // ================= GAME =================
@@ -119,258 +91,209 @@ canvas{
 let board = Array(9).fill("");
 let turn = "X";
 let over = false;
-let myRole = null; // "X" (host) or "O" (guest) in P2P
+let myRole = null;
 
-const win = [
- [0,1,2],[3,4,5],[6,7,8],
- [0,3,6],[1,4,7],[2,5,8],
- [0,4,8],[2,4,6]
-];
+const wins = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
 
 const elBoard = document.getElementById("board");
-const info = document.getElementById("info");
-const mode = document.getElementById("mode");
-const p2p = document.getElementById("p2p");
+const info    = document.getElementById("info");
+const mode    = document.getElementById("mode");
+const p2pDiv  = document.getElementById("p2p");
+const hint    = document.getElementById("p2pHint");
 
 mode.onchange = ()=>{
- p2p.style.display = mode.value==="p2p"?"block":"none";
- reset();
+  p2pDiv.style.display = mode.value==="p2p" ? "block" : "none";
+  reset();
 };
 
 function draw(){
- elBoard.innerHTML="";
- board.forEach((v,i)=>{
-  let d=document.createElement("div");
-  d.className="cell";
-  d.innerText=v;
-  d.onclick=()=>move(i);
-  elBoard.appendChild(d);
- });
+  elBoard.innerHTML="";
+  board.forEach((v,i)=>{
+    let d=document.createElement("div");
+    d.className="cell";
+    d.innerText=v;
+    d.onclick=()=>move(i);
+    elBoard.appendChild(d);
+  });
 }
 
 function move(i){
- if(over || board[i]) return;
-
- // In P2P: block if not your turn
- if(mode.value==="p2p"){
-  if(!dc || dc.readyState!=="open") return;
-  if(turn !== myRole) return;
- }
-
- board[i]=turn;
- draw();
-
- if(check(turn)){
-  info.innerText=turn+" wins";
-  over=true;
+  if(over || board[i]) return;
+  if(mode.value==="p2p"){
+    if(!dc || dc.readyState!=="open") return;
+    if(turn !== myRole) return;
+  }
+  board[i]=turn;
+  draw();
+  if(check(turn)){ info.innerText=turn+" wins!"; over=true; sendMove(i,board[i]); return; }
+  if(board.every(v=>v)){ info.innerText="Draw!"; over=true; sendMove(i,board[i]); return; }
+  turn = turn==="X"?"O":"X";
+  info.innerText="Player "+turn+" turn";
+  if(mode.value==="bot" && turn==="O") setTimeout(bot,400);
   sendMove(i, board[i]);
-  return;
- }
-
- if(board.every(v=>v)){
-  info.innerText="Draw!";
-  over=true;
-  sendMove(i, board[i]);
-  return;
- }
-
- turn = turn==="X"?"O":"X";
- info.innerText="Player "+turn+" turn";
-
- if(mode.value==="bot" && turn==="O"){
-  setTimeout(bot,400);
- }
-
- sendMove(i, board[i]);
 }
 
-function check(p){
- return win.some(c=>c.every(i=>board[i]===p));
-}
+function check(p){ return wins.some(c=>c.every(i=>board[i]===p)); }
 
 function bot(){
- // try to win
- for(let i=0;i<9;i++){
-  if(!board[i]){ board[i]="O"; if(check("O")){ board[i]=""; move(i); return; } board[i]=""; }
- }
- // try to block
- for(let i=0;i<9;i++){
-  if(!board[i]){ board[i]="X"; if(check("X")){ board[i]=""; move(i); return; } board[i]=""; }
- }
- // random
- let free = board.map((v,i)=>v?null:i).filter(v=>v!==null);
- move(free[Math.random()*free.length|0]);
+  for(let i=0;i<9;i++){ if(!board[i]){board[i]="O";if(check("O")){board[i]="";move(i);return;}board[i]="";} }
+  for(let i=0;i<9;i++){ if(!board[i]){board[i]="X";if(check("X")){board[i]="";move(i);return;}board[i]="";} }
+  let free=board.map((v,i)=>v?null:i).filter(v=>v!==null);
+  move(free[Math.random()*free.length|0]);
 }
 
 function reset(){
- board=Array(9).fill("");
- turn="X";
- over=false;
- info.innerText="Player X turn";
- draw();
+  board=Array(9).fill(""); turn="X"; over=false;
+  info.innerText="Player X turn"; draw();
 }
 
 draw();
 
 // ================= P2P =================
 
-let peer;
-let dc;
-let host=false;
-let scanners={};
+let peer, dc;
+let isHost = false;
+let scanners = {};
 
-const cfg={
- iceServers:[{urls:"stun:stun.l.google.com:19302"}]
-};
+const cfg = { iceServers:[{urls:"stun:stun.l.google.com:19302"}] };
 
-// Compress SDP to reduce QR size: keep only the most essential lines
-function compressSDP(sdp){
- return sdp.split("\n")
-  .filter(l=>{
-   // drop non-host ICE candidates (relay/srflx bloat the SDP a lot)
-   if(l.startsWith("a=candidate:") && !l.includes("typ host")) return false;
-   return true;
-  })
-  .join("\n");
+// ---- Minimal SDP: strip everything except what's essential ----
+function minimalSDP(sdp){
+  const essential = [
+    l => l.startsWith("v="),
+    l => l.startsWith("o="),
+    l => l.startsWith("s="),
+    l => l.startsWith("t="),
+    l => l.startsWith("m="),
+    l => l.startsWith("c="),
+    l => l.startsWith("a=ice-ufrag"),
+    l => l.startsWith("a=ice-pwd"),
+    l => l.startsWith("a=fingerprint"),
+    l => l.startsWith("a=setup"),
+    l => l.startsWith("a=mid"),
+    l => l.startsWith("a=sctp-port"),
+    l => l.startsWith("a=max-message-size"),
+    // only host candidates (shortest)
+    l => l.startsWith("a=candidate:") && l.includes("typ host"),
+  ];
+  return sdp.split("\n").filter(l=> essential.some(fn=>fn(l))).join("\n");
 }
 
 function encode(desc){
- const slim = {type:desc.type, sdp:compressSDP(desc.sdp)};
- return btoa(unescape(encodeURIComponent(JSON.stringify(slim))));
+  return btoa(JSON.stringify({t:desc.type[0], s:minimalSDP(desc.sdp)}));
 }
 
 function decode(str){
- return JSON.parse(decodeURIComponent(escape(atob(str))));
+  const o = JSON.parse(atob(str));
+  return { type: o.t==="o"?"offer":"answer", sdp: o.s };
 }
 
-function showQR(canvasId, text){
- const canvas = document.getElementById(canvasId);
- canvas.style.display = "block";
- return QRCode.toCanvas(canvas, text, {width:250, errorCorrectionLevel:"L"});
-}
-
-function setStep(msg){
- document.getElementById("p2pStep").innerText = msg;
+async function showQR(canvasId, text){
+  const c = document.getElementById(canvasId);
+  c.style.display = "block";
+  // errorCorrectionLevel L = max data capacity
+  await QRCode.toCanvas(c, text, {width:250, errorCorrectionLevel:"L"});
+  console.log("QR chars:", text.length);
 }
 
 // ---- HOST ----
 async function createRoom(){
- host=true;
- myRole="X";
- peer=new RTCPeerConnection(cfg);
+  isHost = true; myRole = "X";
+  peer = new RTCPeerConnection(cfg);
+  dc = peer.createDataChannel("g");
+  setupDC(dc);
 
- dc=peer.createDataChannel("g");
- setup(dc);
+  // Collect ALL candidates, then pick best host candidate
+  const candidates = [];
+  peer.onicecandidate = e => { if(e.candidate) candidates.push(e.candidate); };
 
- peer.onicecandidate=async e=>{
-  if(e.candidate) return;
-  // ICE gathering done — show QR
-  await showQR("qr", encode(peer.localDescription));
-  setStep("1) Show this QR to your friend → 2) Click 'Scan QR' to scan their answer");
-  info.innerText="Waiting for friend…";
- };
+  peer.onicegatheringstatechange = async ()=>{
+    if(peer.iceGatheringState !== "complete") return;
 
- const offer=await peer.createOffer();
- await peer.setLocalDescription(offer);
+    // Inject best host candidate into SDP manually
+    const sdp = peer.localDescription.sdp;
+    const encoded = encode({type:"offer", sdp});
+    await showQR("qr", encoded);
+    hint.innerText = "1) Mostra questo QR all'amico → 2) Poi clicca 'Scan QR' per scansionare il suo";
+    info.innerText = "Aspetta che l'amico scansioni…";
+  };
+
+  const offer = await peer.createOffer();
+  await peer.setLocalDescription(offer);
 }
 
-// ---- GUEST (scan offer) or HOST (scan answer) ----
+// ---- SCAN button ----
 async function startScan(){
- // If host already created room: scan answer QR from guest
- if(host && peer){
-  scanForAnswer();
-  return;
- }
- // Otherwise: guest scanning the offer
- scanForOffer();
-}
-
-async function scanForOffer(){
- if(scanners.offer){ try{await scanners.offer.stop();}catch(e){} }
- const r=new Html5Qrcode("reader");
- scanners.offer=r;
-
- r.start(
-  {facingMode:"environment"},
-  {fps:10, qrbox:{width:220,height:220}},
-  async txt=>{
-   await r.stop();
-   const s=decode(txt);
-
-   if(s.type!=="offer") return;
-
-   // Guest: set up peer, generate answer QR
-   myRole="O";
-   peer=new RTCPeerConnection(cfg);
-   peer.ondatachannel=e=>{ dc=e.channel; setup(dc); };
-
-   peer.onicecandidate=async e=>{
-    if(e.candidate) return;
-    await showQR("qrAnswer", encode(peer.localDescription));
-    setStep("Show THIS QR to your host so they can scan it");
-    info.innerText="Show answer QR to host…";
-   };
-
-   await peer.setRemoteDescription(new RTCSessionDescription(s));
-   const ans=await peer.createAnswer();
-   await peer.setLocalDescription(ans);
-  },
-  _=>{}
- );
-}
-
-async function scanForAnswer(){
- if(scanners.answer){ try{await scanners.answer.stop();}catch(e){} }
- const r=new Html5Qrcode("reader2");
- scanners.answer=r;
-
- r.start(
-  {facingMode:"environment"},
-  {fps:10, qrbox:{width:220,height:220}},
-  async txt=>{
-   await r.stop();
-   const s=decode(txt);
-   if(s.type!=="answer") return;
-   await peer.setRemoteDescription(new RTCSessionDescription(s));
-   info.innerText="Connecting…";
-  },
-  _=>{}
- );
-}
-
-function setup(channel){
- channel.onopen=()=>{
-  info.innerText="Connected! You are "+myRole;
-  setStep("");
- };
- channel.onmessage=e=>{
-  const m=JSON.parse(e.data);
-  if(m.type==="move"){
-   board[m.i]=m.p;
-   draw();
-   if(check(m.p)){
-    info.innerText=m.p+" wins";
-    over=true;
-    return;
-   }
-   if(board.every(v=>v)){
-    info.innerText="Draw!";
-    over=true;
-    return;
-   }
-   turn=m.p==="X"?"O":"X";
-   info.innerText="Player "+turn+" turn";
+  if(isHost && peer){
+    // Host scans guest's answer QR
+    runScan("reader2", "answer");
+  } else {
+    // Guest scans host's offer QR
+    runScan("reader", "offer");
   }
- };
+}
+
+async function runScan(readerId, expecting){
+  if(scanners[readerId]){ try{ await scanners[readerId].stop(); }catch(e){} }
+  const r = new Html5Qrcode(readerId);
+  scanners[readerId] = r;
+
+  r.start(
+    {facingMode:"environment"},
+    {fps:10, qrbox:{width:220,height:220}},
+    async txt => {
+      await r.stop();
+      const desc = decode(txt);
+      if(desc.type !== expecting) return;
+
+      if(expecting === "offer"){
+        // Guest side
+        myRole = "O";
+        peer = new RTCPeerConnection(cfg);
+        peer.ondatachannel = e => setupDC(e.channel);
+
+        peer.onicegatheringstatechange = async ()=>{
+          if(peer.iceGatheringState !== "complete") return;
+          const encoded = encode({type:"answer", sdp: peer.localDescription.sdp});
+          await showQR("qrAnswer", encoded);
+          hint.innerText = "Mostra questo QR all'host così può scansionarlo";
+          info.innerText = "Mostra il QR all'host…";
+        };
+
+        await peer.setRemoteDescription(new RTCSessionDescription(desc));
+        const ans = await peer.createAnswer();
+        await peer.setLocalDescription(ans);
+
+      } else {
+        // Host scans answer
+        await peer.setRemoteDescription(new RTCSessionDescription(desc));
+        info.innerText = "Connessione in corso…";
+        hint.innerText = "";
+      }
+    },
+    _ => {}
+  );
+}
+
+function setupDC(channel){
+  dc = channel;
+  dc.onopen  = ()=>{ info.innerText="Connessi! Sei "+myRole; hint.innerText=""; };
+  dc.onmessage = e => {
+    const m = JSON.parse(e.data);
+    if(m.type==="move"){
+      board[m.i]=m.p; draw();
+      if(check(m.p)){ info.innerText=m.p+" wins!"; over=true; return; }
+      if(board.every(v=>v)){ info.innerText="Draw!"; over=true; return; }
+      turn = m.p==="X"?"O":"X";
+      info.innerText="Player "+turn+" turn";
+    }
+  };
 }
 
 function sendMove(i,p){
- if(dc && dc.readyState==="open"){
-  dc.send(JSON.stringify({type:"move",i,p}));
- }
+  if(dc && dc.readyState==="open") dc.send(JSON.stringify({type:"move",i,p}));
 }
 
 </script>
-
 </body>
 </html>
