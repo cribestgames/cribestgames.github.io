@@ -45,6 +45,11 @@ body{
     font-size:60px;
     cursor:pointer;
     user-select:none;
+    transition:0.2s;
+}
+
+.cell:hover{
+    background:#334155;
 }
 
 button,input,select{
@@ -59,6 +64,10 @@ button{
     background:#2563eb;
     color:white;
     cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
 }
 
 input{
@@ -169,9 +178,9 @@ const onlinePanel =
 // PEERJS
 // =====================================================
 
-let peer;
+let peer = null;
 
-let conn;
+let conn = null;
 
 // =====================================================
 // MODE
@@ -218,24 +227,42 @@ drawBoard();
 
 function move(index){
 
+    console.log({
+        turn,
+        myRole,
+        over
+    });
+
     if(over) return;
 
     if(board[index]) return;
 
-    // ONLINE TURN CHECK
+    // ONLINE
 
     if(modeEl.value === "online"){
 
-        if(!conn || !conn.open)
-            return;
+        if(!conn || !conn.open){
 
-        if(turn !== myRole)
+            statusEl.innerText =
+                "Non connesso";
+
             return;
+        }
+
+        if(turn !== myRole){
+
+            statusEl.innerText =
+                "Turno di " + turn;
+
+            return;
+        }
     }
 
     board[index] = turn;
 
     drawBoard();
+
+    sendMove(index, board[index]);
 
     if(checkWinner(turn)){
 
@@ -244,18 +271,15 @@ function move(index){
 
         over = true;
 
-        sendMove(index, board[index]);
-
         return;
     }
 
     if(board.every(v=>v)){
 
-        statusEl.innerText = "Draw!";
+        statusEl.innerText =
+            "Draw!";
 
         over = true;
-
-        sendMove(index, board[index]);
 
         return;
     }
@@ -274,8 +298,6 @@ function move(index){
 
         setTimeout(botMove,400);
     }
-
-    sendMove(index, board[index]);
 }
 
 // =====================================================
@@ -316,10 +338,10 @@ function resetGame(){
 
     over = false;
 
+    drawBoard();
+
     statusEl.innerText =
         "Player X turn";
-
-    drawBoard();
 
     if(conn && conn.open){
 
@@ -335,19 +357,38 @@ function resetGame(){
 
 function hostRoom(){
 
-    const roomId =
+    let roomId =
         document
         .getElementById("roomInput")
         .value
-        .trim();
+        .trim()
+        .toLowerCase();
 
     if(!roomId) return;
 
+    roomId =
+        roomId.replace(/[^a-z0-9]/g,"");
+
+    if(peer){
+
+        peer.destroy();
+    }
+
     myRole = "X";
 
-    peer = new Peer(roomId);
+    peer = new Peer(
+        "room-" + roomId,
+        {
+            host:"0.peerjs.com",
+            port:443,
+            secure:true,
+            debug:2
+        }
+    );
 
-    peer.on("open", ()=>{
+    peer.on("open",(id)=>{
+
+        console.log("HOST:",id);
 
         statusEl.innerText =
             "Stanza creata: " + roomId;
@@ -356,6 +397,8 @@ function hostRoom(){
     peer.on("connection",(connection)=>{
 
         conn = connection;
+
+        turn = "X";
 
         setupConnection();
 
@@ -367,7 +410,10 @@ function hostRoom(){
 
         console.log(err);
 
-        alert("Errore stanza");
+        alert(
+            "Errore host: " +
+            err.type
+        );
     });
 }
 
@@ -377,28 +423,58 @@ function hostRoom(){
 
 function joinRoom(){
 
-    const roomId =
+    let roomId =
         document
         .getElementById("roomInput")
         .value
-        .trim();
+        .trim()
+        .toLowerCase();
 
     if(!roomId) return;
 
+    roomId =
+        roomId.replace(/[^a-z0-9]/g,"");
+
+    if(peer){
+
+        peer.destroy();
+    }
+
     myRole = "O";
 
-    peer = new Peer();
+    peer = new Peer({
+        host:"0.peerjs.com",
+        port:443,
+        secure:true,
+        debug:2
+    });
 
     peer.on("open",()=>{
 
-        conn = peer.connect(roomId);
+        conn = peer.connect(
+            "room-" + roomId,
+            {
+                reliable:true
+            }
+        );
 
         conn.on("open",()=>{
+
+            turn = "X";
+
+            console.log("CONNECTED");
 
             setupConnection();
 
             statusEl.innerText =
-                "Connesso!";
+                "Connesso! Sei O";
+        });
+
+        conn.on("error",(err)=>{
+
+            console.log(err);
+
+            alert("Conn error");
         });
     });
 
@@ -406,7 +482,10 @@ function joinRoom(){
 
         console.log(err);
 
-        alert("Errore connessione");
+        alert(
+            "Errore join: " +
+            err.type
+        );
     });
 }
 
@@ -417,6 +496,8 @@ function joinRoom(){
 function setupConnection(){
 
     conn.on("data",(data)=>{
+
+        console.log("RECV:",data);
 
         // RESET
 
@@ -472,6 +553,12 @@ function setupConnection(){
             statusEl.innerText =
                 "Player " + turn + " turn";
         }
+    });
+
+    conn.on("close",()=>{
+
+        statusEl.innerText =
+            "Connessione chiusa";
     });
 }
 
