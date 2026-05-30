@@ -341,20 +341,20 @@ function botMove(){
     // 1. Vincere
     let moveIndex = findWinningMove("O");
     if(moveIndex !== null){
-        move(moveIndex);
+        move(moveIndex,true);
         return;
     }
 
     // 2. Bloccare
     moveIndex = findWinningMove("X");
     if(moveIndex !== null){
-        move(moveIndex);
+        move(moveIndex,true);
         return;
     }
 
     // 3. Centro (90% delle volte)
     if(board[4] === "" && Math.random() < 0.9){
-        move(4);
+        move(4,true);
         return;
     }
 
@@ -368,7 +368,7 @@ function botMove(){
             corners[
                 Math.floor(Math.random()*corners.length)
             ]
-        );
+        ,true);
 
         return;
     }
@@ -383,7 +383,7 @@ function botMove(){
             sides[
                 Math.floor(Math.random()*sides.length)
             ]
-        );
+        ,true);
 
         return;
     }
@@ -442,7 +442,15 @@ function resetGame(){
     // bot inizia
     if(modeEl.value === "bot" && turn === "O"){
 
-        setTimeout(botMove,400);
+    botThinking = true;
+
+    setTimeout(()=>{
+
+        botMove();
+
+        botThinking = false;
+
+    },500 + Math.random()*1500);
     }
 }
 
