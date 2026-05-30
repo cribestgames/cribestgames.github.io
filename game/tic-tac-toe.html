@@ -152,6 +152,8 @@ let over = false;
 
 let myRole = null;
 
+let botThinking = false;
+
 const wins = [
     [0,1,2],
     [3,4,5],
@@ -226,7 +228,7 @@ drawBoard();
 // MOVE
 // =====================================================
 
-function move(index){
+function move(index,isBot=false){
 
     console.log({
         turn,
@@ -239,6 +241,14 @@ function move(index){
     if(over) return;
 
     if(board[index]) return;
+
+    if(
+    modeEl.value === "bot" &&
+    turn === "O" &&
+    !isBot
+){
+    return;
+    }
 
     // ONLINE
 
@@ -299,7 +309,15 @@ function move(index){
 
     if(modeEl.value === "bot" && turn === "O"){
 
-        setTimeout(botMove,400);
+    botThinking = true;
+
+    setTimeout(()=>{
+
+        botMove();
+
+        botThinking = false;
+
+    },500 + Math.random()*1500);
     }
 }
 
