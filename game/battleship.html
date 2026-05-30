@@ -1,0 +1,302 @@
+<!DOCTYPE html><html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Battaglia Navale</title><script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script><style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#0f172a;
+    color:white;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    max-width:900px;
+    width:100%;
+    text-align:center;
+}
+
+.boards{
+    display:flex;
+    justify-content:space-around;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-top:20px;
+}
+
+.board{
+    display:grid;
+    grid-template-columns:repeat(10,28px);
+    gap:2px;
+    justify-content:center;
+}
+
+.cell{
+    width:28px;
+    height:28px;
+    background:#1e293b;
+    border-radius:4px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    font-size:16px;
+}
+
+.cell:hover{
+    background:#334155;
+}
+
+button,input,select{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    margin:5px;
+    font-size:14px;
+}
+
+button{
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
+}
+
+#status{
+    margin-top:15px;
+    color:#94a3b8;
+}
+.hidden{display:none;}
+</style></head><body><div class="container"><h1>Battaglia Navale</h1><select id="mode">
+<option value="local">Local</option>
+<option value="bot">Bot</option>
+<option value="online">Online</option>
+</select><button onclick="resetGame()">Reset</button>
+
+<div id="onlinePanel" class="hidden">
+<input id="roomInput" placeholder="Room name"/>
+<button onclick="hostRoom()">Crea</button>
+<button onclick="joinRoom()">Entra</button>
+</div><div id="status">Turno tuo</div><div class="boards"><div>
+<h3>La tua flotta</h3>
+<div id="myBoard" class="board"></div>
+</div><div>
+<h3>Nemico</h3>
+<div id="enemyBoard" class="board"></div>
+</div></div></div><script>
+
+// =====================
+// STATE
+// =====================
+
+let myBoard = Array(100).fill(0);
+let enemyBoard = Array(100).fill(0);
+
+let turn = "X";
+let myRole = "X";
+let over = false;
+
+let conn = null;
+let peer = null;
+
+// 0 acqua
+// 1 nave
+// 2 colpito
+// 3 mancato
+
+const ships = [5,4,3,3,2];
+
+// =====================
+// INIT
+// =====================
+
+const myBoardEl = document.getElementById("myBoard");
+const enemyBoardEl = document.getElementById("enemyBoard");
+const statusEl = document.getElementById("status");
+const modeEl = document.getElementById("mode");
+const onlinePanel = document.getElementById("onlinePanel");
+
+modeEl.onchange = ()=>{
+onlinePanel.classList.toggle("hidden", modeEl.value !== "online");
+resetGame();
+};
+
+// =====================
+// DRAW
+// =====================
+
+function draw(){
+myBoardEl.innerHTML="";
+enemyBoardEl.innerHTML="";
+
+for(let i=0;i<100;i++){
+const m = document.createElement("div");
+m.className="cell";
+m.innerHTML = render(myBoard[i], true);
+myBoardEl.appendChild(m);
+
+const e = document.createElement("div");
+e.className="cell";
+e.innerHTML = render(enemyBoard[i], false);
+e.onclick = ()=>attack(i);
+enemyBoardEl.appendChild(e);
+}
+}
+
+function render(v, isMine){
+if(v===1) return "🚢";
+if(v===2) return "💥";
+if(v===3) return "🌊";
+return "";
+}
+
+// =====================
+// SHIPS
+// =====================
+
+function placeShips(board){
+for(const size of ships){
+let placed=false;
+while(!placed){
+let dir = Math.random()<0.5?"h":"v";
+let x = Math.floor(Math.random()*10);
+let y = Math.floor(Math.random()*10);
+
+let cells=[];
+
+for(let i=0;i<size;i++){
+let nx = dir==="h"?x+i:x;
+let ny = dir==="v"?y+i:y;
+if(nx>=10||ny>=10) break;
+cells.push(ny*10+nx);
+}
+
+if(cells.length!==size) continue;
+if(cells.some(c=>board[c]===1)) continue;
+
+cells.forEach(c=>board[c]=1);
+placed=true;
+}
+}
+}
+
+// =====================
+// ATTACK
+// =====================
+
+function attack(i){
+if(over) return;
+if(modeEl.value==="online" && turn!==myRole) return;
+if(enemyBoard[i]!==0) return;
+
+enemyBoard[i]=1;
+
+if(conn) conn.send({type:"attack", i});
+
+checkWin();
+switchTurn();
+draw();
+}
+
+// =====================
+// RECEIVE
+// =====================
+
+function setupConn(){
+conn.on("data",data=>{
+if(data.type==="attack"){
+if(myBoard[data.i]===1){
+myBoard[data.i]=2;
+conn.send({type:"result", i:data.i, hit:true});
+}else{
+myBoard[data.i]=3;
+conn.send({type:"result", i:data.i, hit:false});
+}
+checkWin();
+switchTurn();
+draw();
+}
+
+if(data.type==="result"){
+enemyBoard[data.i]=data.hit?2:3;
+switchTurn();
+draw();
+}
+
+if(data.type==="reset"){
+resetGame(false);
+}
+});
+}
+
+// =====================
+// TURN
+// =====================
+
+function switchTurn(){
+turn = turn==="X"?"O":"X";
+statusEl.innerText="Turno "+turn;
+}
+
+function checkWin(){
+if(myBoard.every(v=>v!==1)) over=true;
+if(enemyBoard.every(v=>v!==1)) over=true;
+}
+
+// =====================
+// RESET
+// =====================
+
+function resetGame(send=true){
+myBoard = Array(100).fill(0);
+enemyBoard = Array(100).fill(0);
+over=false;
+
+placeShips(myBoard);
+placeShips(enemyBoard);
+
+turn="X";
+statusEl.innerText="Turno X";
+draw();
+
+if(conn && send) conn.send({type:"reset"});
+}
+
+// =====================
+// ONLINE
+// =====================
+
+function hostRoom(){
+let id=document.getElementById("roomInput").value;
+peer=new Peer("room-"+id);
+
+myRole="X";
+
+peer.on("connection",c=>{
+conn=c;
+setupConn();
+});
+}
+
+function joinRoom(){
+let id=document.getElementById("roomInput").value;
+peer=new Peer();
+
+myRole="O";
+
+peer.on("open",()=>{
+conn=peer.connect("room-"+id);
+setupConn();
+});
+}
+
+placeShips(myBoard);
+placeShips(enemyBoard);
+draw();
+
+</script></body>
+</html>
