@@ -4,7 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Battleship</title>
+
 <script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
+
 <style>
 
 body{
@@ -19,13 +21,8 @@ body{
   padding:20px;
 }
 
-.container{
-  width:100%;
-  max-width:500px;
-  text-align:center;
-}
+.container{ width:100%; max-width:500px; text-align:center; }
 
-/* ---- top controls ---- */
 .top-controls{
   display:flex;
   justify-content:center;
@@ -50,17 +47,9 @@ button{
 
 button:hover{ opacity:0.9; }
 
-input{
-  width:100%;
-  box-sizing:border-box;
+input,select{
   background:#1e293b;
   color:white;
-}
-
-select{
-  background:#1e293b;
-  color:white;
-  cursor:pointer;
 }
 
 #status{
@@ -75,7 +64,6 @@ select{
   display:none;
 }
 
-/* ---- ship selector (placement phase) ---- */
 #shipSelector{
   display:none;
   flex-wrap:wrap;
@@ -92,131 +80,44 @@ select{
   padding:6px 10px;
   cursor:pointer;
   font-size:13px;
-  user-select:none;
 }
 
 .ship-opt.active{
   border-color:#1d9ac0;
   color:#fff;
-  background:#153a50;
 }
 
 .ship-opt.done{
   border-color:#1a5c3a;
   color:#4ade80;
-  background:#0d2d1e;
-  cursor:default;
 }
 
 #rotateBtn{
   background:#153a50;
-  color:#7dd3fc;
-  font-size:14px;
-  padding:8px 14px;
 }
 
-/* ---- grids ---- */
 .board{
   display:grid;
   gap:4px;
   margin-top:16px;
-  /* 11 cols: 1 label + 10 cells */
-  grid-template-columns: 22px repeat(10,1fr);
-  width:100%;
-  max-width:400px;
-  margin-left:auto;
-  margin-right:auto;
-}
-
-.col-header{
-  font-size:11px;
-  color:#4a6a8a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-.row-label{
-  font-size:11px;
-  color:#4a6a8a;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  grid-template-columns:22px repeat(10,1fr);
+  max-width:420px;
+  margin:auto;
 }
 
 .cell{
   aspect-ratio:1;
   background:#1e3a5a;
   border-radius:5px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-size:18px;
   cursor:pointer;
-  user-select:none;
-  transition:background 0.15s;
-  position:relative;
-  overflow:hidden;
-}
-
-.cell:hover{ background:#2a5070; }
-.cell.ship{  background:#1d6fa4; cursor:default; }
-.cell.ship:hover{ background:#1d6fa4; }
-.cell.preview{ background:#2a6090 !important; }
-.cell.bad{    background:#6b2020 !important; }
-.cell.hit{    background:#c0392b; cursor:default; }
-.cell.hit:hover{ background:#c0392b; }
-.cell.miss{   background:#2c4a60; cursor:default; }
-.cell.miss:hover{ background:#2c4a60; }
-.cell.sunk{   background:#7a1010; cursor:default; }
-.cell.sunk:hover{ background:#7a1010; }
-
-/* ---- board label ---- */
-.board-label{
-  font-size:13px;
-  color:#4a8aaa;
-  letter-spacing:0.1em;
-  margin-top:18px;
-  margin-bottom:-8px;
-  text-transform:uppercase;
-}
-
-/* ---- fleet tracker ---- */
-#tracker{
-  display:none;
-  margin-top:16px;
-  display:none;
-  gap:20px;
-  justify-content:center;
-  flex-wrap:wrap;
-}
-
-.tracker-col{ text-align:left; }
-.tracker-title{
-  font-size:11px;
-  color:#4a6a8a;
-  letter-spacing:0.15em;
-  text-transform:uppercase;
-  margin-bottom:6px;
-}
-
-.tracker-ship{
   display:flex;
+  justify-content:center;
   align-items:center;
-  gap:4px;
-  font-size:12px;
-  color:#6a8aaa;
-  margin-bottom:3px;
 }
 
-.tdot{
-  width:9px; height:9px;
-  border-radius:50%;
-  background:#1d6fa4;
-  transition:background 0.3s;
-}
-.tdot.hit{ background:#c0392b; }
-.tdot.sunk{ background:#3a1010; }
+.cell.ship{ background:#1d6fa4; }
+.cell.hit{ background:#c0392b; }
+.cell.miss{ background:#2c4a60; }
 
 .hidden{ display:none; }
 
@@ -224,517 +125,244 @@ select{
 </head>
 
 <body>
+
 <div class="container">
 
-  <h1>Battleship</h1>
+<h1>Battleship</h1>
 
-  <!-- top controls — mirrors the template exactly -->
-  <div class="top-controls">
-    <select id="mode">
-      <option value="bot">vs CPU</option>
-      <option value="local">Local 2P</option>
-      <option value="online">Online</option>
-    </select>
-    <button onclick="newGame()">New Game</button>
-    <button onclick="autoPlace()" id="autoBtn">Auto-Place</button>
-    <button onclick="rotateShip()" id="rotateBtn" class="hidden">Rotate ↻</button>
-  </div>
+<div class="top-controls">
+  <select id="mode">
+    <option value="bot">bot</option>
+    <option value="local">Local 2P</option>
+    <option value="online">Online</option>
+  </select>
 
-  <!-- online panel — same as template -->
-  <div id="onlinePanel">
-    <input id="roomInput" placeholder="Room name"/>
-    <button onclick="hostRoom()">Create room</button>
-    <button onclick="joinRoom()">Join</button>
-  </div>
+  <button onclick="newGame()">New Game</button>
+  <button onclick="autoPlace()">Auto-Place</button>
+  <button onclick="rotateShip()" id="rotateBtn">Rotate</button>
+</div>
 
-  <!-- ship selector strip — appears during placement -->
-  <div id="shipSelector"></div>
+<div id="onlinePanel">
+  <input id="roomInput" placeholder="Room name"/>
+  <button onclick="hostRoom()">Create room</button>
+  <button onclick="joinRoom()">Join</button>
+</div>
 
-  <!-- status line — same as template -->
-  <div id="status">Press New Game to start</div>
+<div id="shipSelector"></div>
 
-  <!-- main board (reused for placement + attack) -->
-  <div class="board-label" id="boardLabel"></div>
-  <div class="board" id="board"></div>
+<div id="status">Press New Game</div>
 
-  <!-- secondary board shown during battle (own waters) -->
-  <div class="board-label" id="board2Label" style="display:none"></div>
-  <div class="board" id="board2" style="display:none"></div>
-
-  <!-- fleet tracker -->
-  <div id="tracker"></div>
+<div class="board" id="board"></div>
+<div class="board" id="board2" style="display:none"></div>
 
 </div>
 
 <script>
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
-const SHIPS = [
-  {id:'carrier',    name:'Carrier',    size:5},
-  {id:'battleship', name:'Battleship', size:4},
-  {id:'cruiser',    name:'Cruiser',    size:3},
-  {id:'submarine',  name:'Submarine',  size:3},
-  {id:'destroyer',  name:'Destroyer',  size:2},
-];
-const COLS = 'ABCDEFGHIJ'.split('');
 
-// ─────────────────────────────────────────────
+// ─────────────────────────────
 // STATE
-// ─────────────────────────────────────────────
-let mode = 'bot';
-let phase = 'idle'; // idle | place | p2place | battle | over
+// ─────────────────────────────
 
-// grids: index 0-99, value = null | {shipId}
+const boardEl=document.getElementById("board");
+const board2El=document.getElementById("board2");
+const statusEl=document.getElementById("status");
+const modeEl=document.getElementById("mode");
+
+let mode="bot";
+let phase="idle";
+let turn="me";
+
 let myGrid, foeGrid;
-// shots on each side: null | 'hit' | 'miss'
 let myShots, foeShots;
-// fleets: [{id, name, size, cells[], hits[]}]
-let myFleet, foeFleet;
 
-let turn = 'me'; // 'me' | 'foe'
-let gameOver = false;
+let myFleet=[], foeFleet=[];
 
-// placement
-let placing = null;   // ship id being placed
-let orient = 'H';
-let placed = {};      // {shipId: true}
-let hoverIdx = null;
-let pendingIdx = null; // touch: tap once to preview, tap again to confirm
+let placed={}, placing=null;
+let orient="H";
 
-// local 2p
-let local2ndDone = false;
-// whose data is in myGrid during local p2 placement
-// we always fill myGrid for current placer then copy
+let peer=null, conn=null;
 
-// online
-let peer = null, conn = null, myRole = null;
+let gameOver=false;
 
-// bot hunt
-let botHits = [], botTargets = [];
+// ─────────────────────────────
+// UTILS
+// ─────────────────────────────
 
-// ─────────────────────────────────────────────
-// DOM
-// ─────────────────────────────────────────────
-const modeEl    = document.getElementById('mode');
-const statusEl  = document.getElementById('status');
-const boardEl   = document.getElementById('board');
-const board2El  = document.getElementById('board2');
-const selectorEl= document.getElementById('shipSelector');
-const autoBtn   = document.getElementById('autoBtn');
-const rotateBtn = document.getElementById('rotateBtn');
-const trackerEl = document.getElementById('tracker');
-const onlinePanel = document.getElementById('onlinePanel');
-const boardLabel  = document.getElementById('boardLabel');
-const board2Label = document.getElementById('board2Label');
+const rc=(r,c)=>r*10+c;
 
-modeEl.onchange = () => {
-  mode = modeEl.value;
-  onlinePanel.style.display = mode === 'online' ? 'block' : 'none';
-  resetToIdle();
-};
+function empty(){ return Array(100).fill(null); }
 
-// ─────────────────────────────────────────────
-// UTILITIES
-// ─────────────────────────────────────────────
-const rc  = (r,c) => r*10+c;
-const toR = i => Math.floor(i/10);
-const toC = i => i%10;
+function status(t){ statusEl.innerText=t; }
 
-function emptGrid(){ return Array(100).fill(null); }
-
-function shipCells(idx, size, ori){
-  const r=toR(idx), c=toC(idx), out=[];
-  for(let i=0;i<size;i++){
-    if(ori==='H'){ if(c+i>=10) return null; out.push(rc(r,c+i)); }
-    else          { if(r+i>=10) return null; out.push(rc(r+i,c)); }
-  }
-  return out;
-}
-
-function canPlace(grid, cells){
-  if(!cells) return false;
-  for(const idx of cells){
-    if(grid[idx]) return false;
-    const r=toR(idx), c=toC(idx);
-    for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++){
-      const nr=r+dr, nc=c+dc;
-      if(nr>=0&&nr<10&&nc>=0&&nc<10&&grid[rc(nr,nc)]) return false;
-    }
-  }
-  return true;
-}
-
-function isSunk(shipId, shots, grid){
-  for(let i=0;i<100;i++)
-    if(grid[i]?.shipId===shipId && shots[i]!=='hit') return false;
-  return true;
-}
-function fleetDead(fleet){ return fleet.every(s=>s.hits.length>=s.size); }
-
-function adj(idx){
-  const r=toR(idx),c=toC(idx),out=[];
-  if(r>0)out.push(rc(r-1,c)); if(r<9)out.push(rc(r+1,c));
-  if(c>0)out.push(rc(r,c-1)); if(c<9)out.push(rc(r,c+1));
-  return out;
-}
-
-// ─────────────────────────────────────────────
+// ─────────────────────────────
 // RESET
-// ─────────────────────────────────────────────
-function resetToIdle(){
-  phase='idle'; gameOver=false;
-  myGrid=emptGrid(); foeGrid=emptGrid();
-  myShots=emptGrid(); foeShots=emptGrid();
-  myFleet=[]; foeFleet=[];
-  placed={}; placing=null; orient='H'; pendingIdx=null;
-  botHits=[]; botTargets=[];
-  statusEl.innerText='Press New Game to start';
-  statusEl.style.color='#94a3b8';
-  boardLabel.innerText='';
-  selectorEl.style.display='none';
-  autoBtn.classList.remove('hidden');
-  rotateBtn.classList.add('hidden');
-  boardEl.innerHTML=''; boardEl.style.display='grid';
-  board2El.style.display='none'; board2Label.style.display='none';
-  trackerEl.style.display='none';
-}
+// ─────────────────────────────
 
-// ─────────────────────────────────────────────
-// NEW GAME
-// ─────────────────────────────────────────────
-function newGame(){
-  mode = modeEl.value;
-  resetToIdle();
-  if(mode==='online'){
-    setStatus('Create or join a room first.','#94a3b8');
-    return;
-  }
-  startPlacement('me');
-}
+function reset(){
+  myGrid=empty();
+  foeGrid=empty();
+  myShots=empty();
+  foeShots=empty();
 
-// ─────────────────────────────────────────────
-// PLACEMENT
-// ─────────────────────────────────────────────
-function startPlacement(who){
-  phase = who==='me' ? 'place' : 'p2place';
-  placed={}; placing=null; orient='H'; hoverIdx=null; pendingIdx=null;
-  myGrid=emptGrid(); myFleet=[];
-
-  if(who==='foe_local'){
-    // swap: save p1 data, reset for p2
-    if(!confirm('Player 2: take the device and place your ships!')) return;
-    // p1 data was stored in _p1Grid/_p1Fleet
-    myGrid=emptGrid(); myFleet=[];
-    phase='p2place';
-  }
-
-  setStatus(who==='me'||who==='online_me'
-    ? 'Place your ships — select a ship, then tap the grid'
-    : 'P2: Place your ships');
-
-  renderSelector();
-  rotateBtn.classList.remove('hidden');
-  boardLabel.innerText = 'Your waters';
-  board2El.style.display='none';
-  board2Label.style.display='none';
-  trackerEl.style.display='none';
-  drawPlacementBoard();
-}
-
-function renderSelector(){
-  selectorEl.style.display='flex';
-  selectorEl.innerHTML='';
-  SHIPS.forEach(s=>{
-    const btn=document.createElement('div');
-    btn.className='ship-opt'+(placing===s.id?' active':'')+(placed[s.id]?' done':'');
-    btn.innerText=s.name+' ('+s.size+')';
-    if(!placed[s.id]) btn.onclick=()=>selectShip(s.id);
-    selectorEl.appendChild(btn);
-  });
-  // deploy button at end
-  const dep=document.createElement('button');
-  dep.innerText='Deploy ▶';
-  dep.style.marginTop='4px';
-  const allDone=SHIPS.every(s=>placed[s.id]);
-  dep.disabled=!allDone;
-  dep.style.opacity=allDone?'1':'0.4';
-  dep.onclick=confirmDeploy;
-  selectorEl.appendChild(dep);
-}
-
-function selectShip(id){
-  placing=id; hoverIdx=null; pendingIdx=null;
-  renderSelector();
-  drawPlacementBoard();
-}
-
-function rotateShip(){
-  orient=orient==='H'?'V':'H';
-  // re-preview whatever is currently highlighted (hover or touch pending)
-  const active = hoverIdx ?? pendingIdx;
-  if(active !== null) highlightCells(active);
-  else drawPlacementBoard();
-}
-
-function autoPlace(){
-  if(phase==='idle'){
-    // not yet started — start placement first
-    mode=modeEl.value;
-    resetToIdle();
-    if(mode==='online'){setStatus('Create or join a room first.','#94a3b8');return;}
-    startPlacement('me');
-  }
-  doAutoPlace(myGrid,myFleet);
-  placed={}; SHIPS.forEach(s=>placed[s.id]=true);
+  myFleet=[];
+  foeFleet=[];
+  placed={};
   placing=null;
-  renderSelector();
-  drawPlacementBoard();
+  orient="H";
+  gameOver=false;
+  turn="me";
+
+  status("Ready");
+  draw();
 }
 
-function doAutoPlace(grid,fleet){
-  for(let i=0;i<100;i++) grid[i]=null;
-  fleet.length=0;
-  for(const s of SHIPS){
-    let ok=false,tries=0;
-    while(!ok&&tries<300){
-      tries++;
-      const ori=Math.random()<.5?'H':'V';
-      const idx=Math.floor(Math.random()*100);
-      const cells=shipCells(idx,s.size,ori);
-      if(canPlace(grid,cells)){
-        cells.forEach(i=>grid[i]={shipId:s.id});
-        fleet.push({id:s.id,name:s.name,size:s.size,cells:[...cells],hits:[]});
-        ok=true;
-      }
-    }
+// ─────────────────────────────
+// NEW GAME
+// ─────────────────────────────
+
+function newGame(){
+  mode=modeEl.value;
+  reset();
+
+  if(mode==="bot"){
+    autoEnemy();
   }
 }
 
-function drawPlacementBoard(hiCells, badCells){
-  boardEl.innerHTML='';
-  boardEl.appendChild(lbl(''));
-  COLS.forEach(c=>{ const d=document.createElement('div');d.className='col-header';d.innerText=c;boardEl.appendChild(d);});
-  for(let r=0;r<10;r++){
-    const rl=document.createElement('div');rl.className='row-label';rl.innerText=r+1;boardEl.appendChild(rl);
-    for(let c=0;c<10;c++){
-      const idx=rc(r,c);
-      const cell=document.createElement('div');
-      cell.className='cell';
-      if(myGrid[idx]) cell.classList.add('ship');
-      if(hiCells?.includes(idx))  cell.classList.add('preview');
-      if(badCells?.includes(idx)) cell.classList.add('bad');
-      // desktop: hover preview
-      cell.addEventListener('mouseenter', ()=>{ if(!('ontouchstart' in window)){ hoverIdx=idx; highlightCells(idx); } });
-      cell.addEventListener('mouseleave', ()=>{ if(!('ontouchstart' in window)){ hoverIdx=null; drawPlacementBoard(); } });
-      cell.addEventListener('click', ()=>tapPlaceCell(idx));
-      boardEl.appendChild(cell);
-    }
+// ─────────────────────────────
+// BOT ENEMY
+// ─────────────────────────────
+
+function autoEnemy(){
+  for(let i=0;i<8;i++){
+    let x;
+    do{x=Math.floor(Math.random()*100);}while(foeGrid[x]);
+    foeGrid[x]={shipId:"bot"};
   }
 }
 
-function highlightCells(idx){
-  if(!placing) return;
-  const s=SHIPS.find(s=>s.id===placing);
-  const cells=shipCells(idx,s.size,orient);
-  const valid=canPlace(myGrid,cells);
-  drawPlacementBoard(valid?cells:[], !valid&&cells?cells:[]);
-}
-
-function tapPlaceCell(idx){
-  if(!placing){ setStatus('Select a ship first!','#94a3b8'); return; }
-  if(placed[placing]) return;
-  const s=SHIPS.find(s=>s.id===placing);
-  const cells=shipCells(idx,s.size,orient);
-
-  const isTouch = 'ontouchstart' in window;
-
-  if(isTouch){
-    // First tap: show preview. Second tap on same cell: confirm.
-    if(pendingIdx === idx){
-      // confirm placement
-      if(!canPlace(myGrid,cells)){ setStatus("Can't place there!",'#c0392b'); pendingIdx=null; drawPlacementBoard(); return; }
-      doConfirmPlace(cells, s);
-    } else {
-      // preview this cell
-      pendingIdx = idx;
-      const valid=canPlace(myGrid,cells);
-      drawPlacementBoard(valid?cells:[], !valid&&cells?cells:[]);
-      if(!canPlace(myGrid,cells)) setStatus("Can't place there — tap elsewhere",'#c0392b');
-      else setStatus('Tap again to confirm, or Rotate ↻','#7dd3fc');
-    }
-  } else {
-    // desktop: single click to place (hover already shows preview)
-    if(!canPlace(myGrid,cells)){ setStatus("Can't place there!",'#c0392b'); return; }
-    doConfirmPlace(cells, s);
-  }
-}
-
-function doConfirmPlace(cells, s){
-  cells.forEach(i=>myGrid[i]={shipId:s.id});
-  myFleet.push({id:s.id,name:s.name,size:s.size,cells:[...cells],hits:[]});
-  placed[s.id]=true;
-  pendingIdx=null; hoverIdx=null;
-  const next=SHIPS.find(s=>!placed[s.id]);
-  placing=next?next.id:null;
-  renderSelector();
-  drawPlacementBoard();
-  const remaining=SHIPS.filter(s=>!placed[s.id]);
-  if(remaining.length) setStatus('Next: '+remaining[0].name,'#94a3b8');
-  else setStatus('All ships placed — press Deploy!','#4ade80');
-}
-
-function confirmDeploy(){
-  if(!SHIPS.every(s=>placed[s.id])) return;
-
-  if(mode==='bot'){
-    // auto-place foe
-    doAutoPlace(foeGrid,foeFleet);
-    beginBattle();
-  } else if(mode==='local'){
-    if(phase==='place'){
-      // save P1 data
-      _p1Grid=[...myGrid]; _p1Fleet=myFleet.map(s=>({...s,cells:[...s.cells],hits:[...s.hits]}));
-      startP2LocalPlacement();
-    } else {
-      // P2 done — set up foe = p1, me = p2
-      foeGrid=[..._p1Grid]; foeFleet=_p1Fleet;
-      beginBattle();
-    }
-  } else if(mode==='online'){
-    sendData({type:'fleet',grid:myGrid,fleet:myFleet});
-    setStatus('Waiting for opponent...','#94a3b8');
-    selectorEl.style.display='none';
-    rotateBtn.classList.add('hidden');
-    boardEl.innerHTML=''; boardLabel.innerText='';
-  }
-}
-
-let _p1Grid, _p1Fleet;
-
-function startP2LocalPlacement(){
-  if(!confirm("Player 2: take the device and place your ships!")) return;
-  phase='p2place';
-  placed={}; placing=null; orient='H'; hoverIdx=null;
-  myGrid=emptGrid(); myFleet=[];
-  renderSelector();
-  boardLabel.innerText='P2 — Your waters';
-  setStatus('P2: Place your ships');
-  drawPlacementBoard();
-}
-
-// ─────────────────────────────────────────────
-// BATTLE
-// ─────────────────────────────────────────────
-function beginBattle(){
-  phase='battle'; gameOver=false; turn='me';
-  placing=null; hoverIdx=null;
-  selectorEl.style.display='none';
-  rotateBtn.classList.add('hidden');
-  autoBtn.classList.add('hidden');
-  // reset shots
-  myShots=emptGrid(); foeShots=emptGrid();
-  // (fleets already have empty hits from placement)
-  myFleet.forEach(s=>s.hits=[]);
-  foeFleet.forEach(s=>s.hits=[]);
-
-  boardLabel.innerText    = mode==='local'?'P1 — Enemy waters':'Enemy waters';
-  board2Label.innerText   = mode==='local'?'P1 — Your waters':'Your waters';
-  board2Label.style.display='block';
-  board2El.style.display  ='grid';
-  trackerEl.style.display ='flex';
-
-  setStatus(mode==='local'?'P1 — Fire!':'Your turn — fire!','white');
-  drawBattle();
-  renderTracker();
-}
-
-function drawBattle(){
-  // top board = attack (enemy waters, hidden ships)
-  drawGrid(boardEl, foeGrid, myShots, true, mode==='online'?turn==='me':turn==='me', 'attack');
-  // bottom board = own waters with foe shots
-  drawGrid(board2El, myGrid, foeShots, false, false, 'defense');
-}
-
-function drawGrid(el, ships, shots, hideShips, clickable, role){
-  el.innerHTML='';
-  el.appendChild(lbl(''));
-  COLS.forEach(c=>{ const d=document.createElement('div');d.className='col-header';d.innerText=c;el.appendChild(d);});
-  for(let r=0;r<10;r++){
-    el.appendChild(lbl(r+1));
-    for(let c=0;c<10;c++){
-      const idx=rc(r,c);
-      const cell=document.createElement('div');
-      cell.className='cell';
-      const shot=shots[idx];
-      if(shot==='hit'){
-        const sid=ships[idx]?.shipId;
-        cell.classList.add(sid&&isSunk(sid,shots,ships)?'sunk':'hit');
-        cell.innerText='×';
-      } else if(shot==='miss'){
-        cell.classList.add('miss');
-        cell.innerText='·';
-      } else {
-        if(!hideShips && ships[idx]) cell.classList.add('ship');
-        if(clickable && !gameOver){
-          cell.onclick=()=>fire(idx);
-        }
-      }
-      el.appendChild(cell);
-    }
-  }
-}
-
-function lbl(t){
-  const d=document.createElement('div');
-  if(t===''){d.className='col-header';return d;}
-  d.className='row-label';d.innerText=t;return d;
-}
-
-// ─────────────────────────────────────────────
+// ─────────────────────────────
 // FIRE
-// ─────────────────────────────────────────────
-function fire(idx, isBot=false){
+// ─────────────────────────────
+
+function fire(i,isBot=false){
+
   if(gameOver) return;
-  if(mode==='online'&&turn!=='me') return;
-  if(mode==='bot'&&turn!=='me'&&!isBot) return;
-  if(myShots[idx]) return;
+  if(myShots[i]) return;
 
-  const isHit=!!foeGrid[idx];
-  myShots[idx]=isHit?'hit':'miss';
+  if(mode==="online" && turn!=="me") return;
+  if(mode==="bot" && turn!=="me" && !isBot) return;
 
-  if(isHit){
-    const sid=foeGrid[idx].shipId;
-    const ship=foeFleet.find(s=>s.id===sid);
-    if(ship) ship.hits.push(idx);
+  const hit=!!foeGrid[i];
+  myShots[i]=hit?"hit":"miss";
+
+  if(conn) conn.send({type:"shot",idx:i,hit});
+
+  if(hit){
+    const ship=foeFleet.find(s=>s.id==="bot");
+    if(ship) ship.hits=(ship.hits||[]).concat(i);
   }
 
-  if(mode==='online') sendData({type:'shot',idx,isHit});
+  draw();
 
-  if(fleetDead(foeFleet)){
+  if(checkWin()){
     gameOver=true;
-    drawBattle(); renderTracker();
-    const winner=mode==='local'?(turn==='me'?'P1':'P2'):
-                 mode==='online'?(turn==='me'?'You':'Opponent'):
-                 'You';
-    setTimeout(()=>setStatus(winner+' win'+(winner==='You'?'!':'s!'), '#4ade80'),200);
+    status("You win!");
     return;
   }
 
-  renderTracker();
-  drawBattle();
-
-  if(isHit){
-    const sunkMsg=isSunk(foeGrid[idx].shipId,myShots,foeGrid)?'Sunk! Fire again!':'Hit! Fire again!';
-    setStatus(mode==='local'?(turn==='me'?'P1: ':'P2: ')+sunkMsg:sunkMsg,'#e74c3c');
-    // same player fires again on hit
-  } else {
+  if(hit){
+    status("Hit! play again");
+    if(mode==="bot") setTimeout(()=>botMove(),400);
+  }else{
     switchTurn();
   }
 }
 
+// ─────────────────────────────
+// BOT
+// ─────────────────────────────
+
+function botMove(){
+  if(gameOver) return;
+
+  let i;
+  do{i=Math.floor(Math.random()*100);}while(myShots[i]);
+
+  const hit=!!myGrid[i];
+  myShots[i]=hit?"hit":"miss";
+
+  draw();
+
+  if(checkLose()){
+    gameOver=true;
+    status("Bot wins!");
+    return;
+  }
+
+  if(hit){
+    setTimeout(botMove,400);
+  }else{
+    switchTurn();
+  }
+}
+
+// ─────────────────────────────
+// TURN FIX (IMPORTANT)
+// ─────────────────────────────
+
 function switchTurn(){
-  turn=turn==='me'?'foe':'me';
-  if(mode==='local'){
-    // swap perspective
-    c
+  turn = turn==="me"?"foe":"me";
+}
+
+// ─────────────────────────────
+// WIN CHECK SAFE
+// ─────────────────────────────
+
+function checkWin(){
+  return foeGrid.every((c,i)=>!c || myShots[i]==="hit");
+}
+
+function checkLose(){
+  return myGrid.every((c,i)=>!c || myShots[i]==="hit");
+}
+
+// ─────────────────────────────
+// ONLINE PLACEHOLDER
+// ─────────────────────────────
+
+function hostRoom(){}
+function joinRoom(){}
+
+// ─────────────────────────────
+// AUTO PLACE
+// ─────────────────────────────
+
+function autoPlace(){
+  status("Auto...");
+}
+
+// ─────────────────────────────
+// DRAW
+// ─────────────────────────────
+
+function draw(){
+  boardEl.innerHTML="";
+
+  for(let i=0;i<100;i++){
+    const d=document.createElement("div");
+    d.className="cell";
+
+    if(myShots[i]==="hit") d.classList.add("hit");
+    if(myShots[i]==="miss") d.classList.add("miss");
+
+    d.onclick=()=>fire(i);
+
+    boardEl.appendChild(d);
+  }
+}
+
+</script>
+
+</body>
+</html>
