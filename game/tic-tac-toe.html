@@ -320,13 +320,43 @@ function checkWinner(player){
 
 function botMove(){
 
-    const free = board
-        .map((v,i)=>v ? null : i)
-        .filter(v=>v!==null);
+    // 15% di probabilità di fare una mossa casuale
+    if(Math.random() < 0.15){
 
-    move(
-        free[Math.random()*free.length|0]
-    );
+        const free = board
+            .map((v,i)=> v === "" ? i : null)
+            .filter(v => v !== null);
+
+        move(
+            free[Math.floor(Math.random()*free.length)]
+        );
+
+        return;
+    }
+
+    let bestScore = -Infinity;
+    let bestMove = null;
+
+    for(let i=0;i<9;i++){
+
+        if(board[i] === ""){
+
+            board[i] = "O";
+
+            const score =
+                minimax(board,false,0);
+
+            board[i] = "";
+
+            if(score > bestScore){
+
+                bestScore = score;
+                bestMove = i;
+            }
+        }
+    }
+
+    move(bestMove);
 }
 
 // =====================================================
