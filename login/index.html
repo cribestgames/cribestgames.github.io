@@ -58,7 +58,7 @@
     <p class="subtitle" id="subtitle"></p>
 
     <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" id="password-placeholder">
+    <input type="password" id="password">
 
     <button class="login-btn" id="loginBtn"></button>
     <button class="register-btn" id="registerBtn"></button>
@@ -161,6 +161,39 @@
     document.getElementById("loginBtn").onclick    = login;
     document.getElementById("registerBtn").onclick = register;
     document.getElementById("googleBtn").onclick   = googleLogin;
+
+    // Handle OAuth redirect tokens (refresh_token, provider_token)
+    (async function handleOAuthRedirect() {
+      try {
+        const raw = window.location.hash || window.location.search;
+        if (!raw) return;
+
+        const qs = new URLSearchParams(raw.startsWith('#') ? raw.slice(1) : raw);
+        const refreshToken = qs.get('refresh_token');
+        const providerToken = qs.get('provider_token');
+        if (!refreshToken && !providerToken) return;
+
+        if (refreshToken) {
+          const result = await client.auth.refreshSession({ refresh_token: refreshToken });
+          if (result.error) {
+            console.error('Supabase refreshSession error', result.error);
+            setStatus('Auth refresh failed');
+          } else {
+            setStatus('Signed in via Google');
+          }
+        }
+
+        if (providerToken) {
+          const upd = await client.auth.updateUser({ data: { provider_token: providerToken } });
+          if (upd.error) console.error('Supabase updateUser error', upd.error);
+        }
+
+        // Remove sensitive tokens from URL without reloading
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      } catch (err) {
+        console.error('OAuth redirect handling failed', err);
+      }
+    })();
   </script>
 </body>
 </html>
