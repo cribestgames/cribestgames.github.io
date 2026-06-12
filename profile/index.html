@@ -131,7 +131,7 @@
       <a class="achievements-btn" id="achievements-btn" href="/achievements">🏆</a>
 
     <div class="avatar-wrapper" onclick="document.getElementById('file-input').click()">
-      <img id="avatar" class="avatar" src="">
+      <img id="avatar" class="avatar" src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png">
       <div class="avatar-overlay">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -195,7 +195,6 @@
       },
     };
 
-    // Stessa logica della pagina che funziona
     var _nav = navigator.language || navigator.userLanguage || 'en';
     var lang = _nav.startsWith('it') ? 'it' : _nav.startsWith('uk') ? 'uk' : 'en';
     const t = translations[lang];
