@@ -2,4 +2,5 @@
   "title": "Rocket Goal",
   "description": "Play Rocket Goal on cribestgames",
   "iframe": "https://rocketgoal.io/"
+  "landscape": true
 }
