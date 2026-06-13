@@ -2,4 +2,5 @@
   "title": "Poxel",
   "description": "Play Poxel on cribestgames",
   "iframe": "https://poxel.io/"
+  "landscape": true
 }
