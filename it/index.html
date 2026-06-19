@@ -15,17 +15,19 @@
   <link rel="alternate" hreflang="uk" href="https://cribestgames.github.io/uk/">
   <style>
     body {
-      background-color: rgb(54, 18, 18);
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding-top: 50px;
-      -webkit-tap-highlight-color: transparent;
-    }
+  background-color: rgb(54, 18, 18);
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 50px;
 
+  /* spazio per il footer */
+  padding-bottom: 60px;
+}
     .profile-button {
 
   position: fixed;
@@ -122,15 +124,28 @@
       z-index: 1000;
     }
 
-    .license {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
-      bottom: 30px;
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 13px;
-      white-space: nowrap;
-    }
+    .footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+
+  text-align: center;
+
+  background-color: rgb(54, 18, 18);
+
+  padding: 6px 0;
+}
+
+.license {
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+}
+
+.seo-text {
+  color: rgba(255,255,255,0.5);
+  font-size: 10px;
+}
   </style>
 </head>
 <body>
@@ -199,19 +214,15 @@
 
   </div>
 
-  <div class="license">Copyright © 2025-2026 cribest7890</div>
-  <p style="
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 0px;
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 10px;
-  text-align: center;
-  white-space: nowrap;
-">
-Giochi online gratis: azione, puzzle e multiplayer direttamente dal browser.
-  </p>
+  <div class="footer">
+  <div class="license">
+    Copyright © 2025-2026 cribest7890
+  </div>
+
+  <div class="seo-text">
+    Giochi online gratis: azione, puzzle e multiplayer direttamente dal browser.
+  </div>
+</div>
 
 <a id="profileLink" class="profile-button">
 
