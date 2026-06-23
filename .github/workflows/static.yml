@@ -11,7 +11,7 @@ on:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: write # Modificato in 'write' per permettere la creazione della sitemap
+  contents: write # Permette la creazione e scrittura della sitemap nel repository
   pages: write
   id-token: write
 
@@ -34,7 +34,11 @@ jobs:
       - name: Generate XML Sitemap
         uses: cicirello/generate-sitemap@v1
         with:
-          base-url-path: https://cribestgames.github.io # SOSTITUISCI CON IL TUO URL REALE
+          base-url-path: https://github.io
+          # Esclude i file di sistema di GitHub e file di testo che generavano tag vuoti o inutili
+          exclude-paths: "/.github/ /CNAME /README.md /LICENSE"
+          # Rimuove gli spazi bianchi e le righe vuote superflue dal file XML finale
+          xml-minify: true
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -42,10 +46,9 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository (ora include sitemap.xml appena generata)
+          # Upload entire repository (ora include sitemap.xml pulita e ottimizzata)
           path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-        
