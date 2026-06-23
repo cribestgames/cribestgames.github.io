@@ -34,9 +34,10 @@ jobs:
       - name: Generate XML Sitemap
         uses: cicirello/generate-sitemap@v1
         with:
+          # Inseriamo l'URL completo con lo slash finale per evitare il taglio del dominio
           base-url-path: https://github.io
-          # Esclude i file di sistema di GitHub e file di testo che generavano tag vuoti o inutili
-          exclude-paths: "/.github/ /CNAME /README.md /LICENSE"
+          # Esclude i file interni, la pagina 404 e i file di testo che generavano tag vuoti
+          exclude-paths: "/.github/ /CNAME /README.md /LICENSE /404.html"
           # Rimuove gli spazi bianchi e le righe vuote superflue dal file XML finale
           xml-minify: true
 
@@ -46,7 +47,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository (ora include sitemap.xml pulita e ottimizzata)
+          # Upload entire repository (ora include sitemap.xml pulita e con URL corretti)
           path: '.'
 
       - name: Deploy to GitHub Pages
