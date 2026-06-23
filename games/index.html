@@ -13,7 +13,6 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
-    /* Blocca pull-to-refresh e overscroll su iOS/Android */
     html, body {
       overscroll-behavior: none;
       overscroll-behavior-y: none;
@@ -105,7 +104,7 @@
       position: fixed;
       inset: 0;
       z-index: 9999;
-      background: rgb(54, 18, 18); /* stesso colore della pagina */
+      background: rgb(54, 18, 18);
       flex-direction: row;
     }
 
@@ -113,7 +112,6 @@
       display: flex;
     }
 
-    /* Barra sinistra 20px */
     #fs-sidebar {
       width: 20px;
       flex-shrink: 0;
@@ -146,7 +144,6 @@
       color: rgba(255,255,255,0.95);
     }
 
-    /* Contenitore iframe: occupa il resto (calc 100% - 20px) */
     #fs-iframe-container {
       flex: 1;
       position: relative;
@@ -161,6 +158,26 @@
       height: 100%;
       border: none;
       display: block;
+    }
+
+    /* ── LANDSCAPE OVERLAY ── */
+    #landscape-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      background: black;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #landscape-overlay.visible {
+      display: flex;
+    }
+
+    #landscape-overlay svg {
+      width: 160px;
+      height: 160px;
     }
 
     /* ── fine fake fullscreen ── */
@@ -260,6 +277,95 @@
   </div>
   <div id="fs-iframe-container">
     <iframe id="game-frame-fs" src="about:blank" allowfullscreen></iframe>
+
+    <!-- LANDSCAPE ROTATION OVERLAY -->
+    <div id="landscape-overlay">
+      <!--
+        SVG animation: phone rotates portrait→landscape in loop.
+        Two curved arrows animate to suggest rotation.
+        All white on black, clean style.
+      -->
+      <svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Phone group rotates: 0deg (portrait) → 90deg (landscape) → hold → back -->
+          <animateTransform
+            id="phoneRotAnim"
+            attributeName="transform"
+            type="rotate"
+            values="0 80 80; 0 80 80; 90 80 80; 90 80 80; 0 80 80"
+            keyTimes="0; 0.25; 0.6; 0.8; 1"
+            dur="2.6s"
+            repeatCount="indefinite"
+            calcMode="spline"
+            keySplines="0 0 1 1; 0.4 0 0.2 1; 0 0 1 1; 0.4 0 0.2 1"
+          />
+        </defs>
+
+        <!-- Rotating phone group -->
+        <g>
+          <animateTransform
+            attributeName="transform"
+            type="rotate"
+            values="0 80 80; 0 80 80; 90 80 80; 90 80 80; 0 80 80"
+            keyTimes="0; 0.25; 0.6; 0.8; 1"
+            dur="2.6s"
+            repeatCount="indefinite"
+            calcMode="spline"
+            keySplines="0 0 1 1; 0.4 0 0.2 1; 0 0 1 1; 0.4 0 0.2 1"
+          />
+          <!-- Phone body -->
+          <rect x="62" y="38" width="36" height="64" rx="6" ry="6"
+                stroke="white" stroke-width="3" fill="none"/>
+          <!-- Speaker slot -->
+          <rect x="73" y="44" width="14" height="3" rx="1.5" fill="white" opacity="0.7"/>
+          <!-- Home button -->
+          <circle cx="80" cy="93" r="4" stroke="white" stroke-width="2.2" fill="none"/>
+        </g>
+
+        <!-- Arrow LEFT (counter-clockwise top arc) -->
+        <!-- Fades/moves in first half, then out -->
+        <g>
+          <!-- arc going counter-clockwise top-left -->
+          <path d="M 52 62 A 32 32 0 0 1 80 44" 
+                stroke="white" stroke-width="3" stroke-linecap="round" fill="none">
+            <animate attributeName="stroke-dasharray" values="0 60; 60 0; 60 0; 0 60; 0 60"
+              keyTimes="0; 0.22; 0.5; 0.72; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0; 1; 1; 0; 0"
+              keyTimes="0; 0.1; 0.5; 0.65; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+          </path>
+          <!-- arrowhead at start of arc (pointing down-left) -->
+          <polyline points="46,67 52,62 57,68"
+                    stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <animate attributeName="opacity" values="0; 1; 1; 0; 0"
+              keyTimes="0; 0.1; 0.5; 0.65; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+          </polyline>
+        </g>
+
+        <!-- Arrow RIGHT (clockwise bottom arc) -->
+        <g>
+          <path d="M 108 98 A 32 32 0 0 1 80 116"
+                stroke="white" stroke-width="3" stroke-linecap="round" fill="none">
+            <animate attributeName="stroke-dasharray" values="0 60; 60 0; 60 0; 0 60; 0 60"
+              keyTimes="0; 0.22; 0.5; 0.72; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0; 1; 1; 0; 0"
+              keyTimes="0; 0.1; 0.5; 0.65; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+          </path>
+          <!-- arrowhead at end of arc (pointing down-left along arc) -->
+          <polyline points="74,111 80,116 80,109"
+                    stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none">
+            <animate attributeName="opacity" values="0; 1; 1; 0; 0"
+              keyTimes="0; 0.1; 0.5; 0.65; 1"
+              dur="2.6s" repeatCount="indefinite"/>
+          </polyline>
+        </g>
+      </svg>
+    </div>
+
   </div>
 </div>
 
@@ -296,11 +402,11 @@
 
   document.getElementById('back-btn').href = '/' + lang + '/';
 
-  // Etichetta exit in base alla lingua
   var exitLabels = { en: 'Exit', it: 'Esci', uk: 'Вийти' };
   document.getElementById('fs-exit-label').textContent = exitLabels[lang] || 'Exit';
 
   let gameIframe = '';
+  let gameLandscape = false; // read from JSON
 
   const suggestedGames = [
     'ball-clicker',
@@ -399,6 +505,7 @@
       .then(res => res.json())
       .then(data => {
         gameIframe = data.iframe;
+        gameLandscape = data.landscape === true;
         document.getElementById('game-title').textContent = data.title;
         document.getElementById('game-desc').textContent = data.description;
 
@@ -415,20 +522,38 @@
   const frameFs  = document.getElementById('game-frame-fs');
   const preview  = document.getElementById('game-preview');
   const sidebar  = document.getElementById('fs-sidebar');
+  const landscapeOverlay = document.getElementById('landscape-overlay');
 
-  // true = mobile/touch, false = desktop
   const isMobile = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+  /* ── LANDSCAPE OVERLAY LOGIC ── */
+  function isPortrait() {
+    return window.innerHeight > window.innerWidth;
+  }
+
+  function updateLandscapeOverlay() {
+    if (!gameLandscape) return;
+    if (!fakeFs.classList.contains('active')) return;
+
+    if (isPortrait()) {
+      landscapeOverlay.classList.add('visible');
+    } else {
+      landscapeOverlay.classList.remove('visible');
+    }
+  }
 
   /* ── FAKE FULLSCREEN (mobile) ── */
   function enterFakeFS() {
     fakeFs.classList.add('active');
     document.body.style.overflow = 'hidden';
+    updateLandscapeOverlay();
   }
 
   function exitFakeFS() {
     fakeFs.classList.remove('active');
     document.body.style.overflow = '';
     preview.style.display = '';
+    landscapeOverlay.classList.remove('visible');
   }
 
   /* ── NATIVE FULLSCREEN (desktop) ── */
@@ -445,10 +570,8 @@
     if (document.fullscreenElement || document.webkitFullscreenElement) {
       (document.exitFullscreen || document.webkitExitFullscreen).call(document);
     }
-    // exitFakeFS viene chiamato da fullscreenchange
   }
 
-  // Su desktop, quando il browser esce dal fullscreen nativo ripristina il preview
   document.addEventListener('fullscreenchange', () => {
     if (!isMobile && !document.fullscreenElement) {
       exitFakeFS();
@@ -458,6 +581,13 @@
     if (!isMobile && !document.webkitFullscreenElement) {
       exitFakeFS();
     }
+  });
+
+  /* ── Orientation / resize listeners for landscape overlay ── */
+  window.addEventListener('resize', updateLandscapeOverlay);
+  window.addEventListener('orientationchange', function() {
+    // small delay to let dimensions settle after rotation
+    setTimeout(updateLandscapeOverlay, 120);
   });
 
   /* ── tasto Exit ── */
@@ -482,13 +612,11 @@
     if (isMobile) {
       enterFakeFS();
     } else {
-      // Su desktop: mostra il fake-fs e poi chiede il fullscreen nativo
       enterFakeFS();
       enterNativeFS();
     }
   });
 
-  // Blocca swipe-down per ricaricare su iOS (touchmove sul fake-fs)
   fakeFs.addEventListener('touchmove', function(e) {
     e.preventDefault();
   }, { passive: false });
@@ -496,3 +624,4 @@
 
 </body>
 </html>
+
