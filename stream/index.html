@@ -30,67 +30,47 @@
       height: 100%;
       object-fit: cover;
       background: #000;
+      display: none;
       opacity: 0;
       transition: opacity 0.25s ease;
       pointer-events: none;
     }
 
-    body.ready video {
+    body.playing video {
+      display: block;
       opacity: 1;
     }
   </style>
 </head>
 <body>
-  <video id="bg-video" autoplay muted playsinline loop preload="auto">
+  <video id="bg-video" playsinline preload="none" loop>
     <source src="nggyu.webm" type="video/webm" />
   </video>
 
-  <button id="unmute-btn" aria-label="Attiva audio">Ascolta</button>
+  <button id="play-btn" aria-label="Play">Play</button>
 
   <script>
     const video = document.getElementById('bg-video');
-    const unmuteBtn = document.getElementById('unmute-btn');
+    const playBtn = document.getElementById('play-btn');
 
-    const showVideo = () => {
-      document.body.classList.add('ready');
-    };
-
-    video.addEventListener('canplaythrough', showVideo, { once: true });
-    video.addEventListener('playing', showVideo, { once: true });
-    video.addEventListener('loadeddata', () => {
-      if (video.readyState >= 2) {
-        showVideo();
-      }
-    });
-
-    video.addEventListener('error', () => {
-      document.body.classList.add('ready');
-    });
-
-    // Try to autoplay muted (will usually succeed). User must unmute for sound.
-    video.load();
-    video.play().catch(() => {});
-
-    // Unmute button: user gesture required by browsers to enable audio.
-    const hideUnmute = () => {
-      if (unmuteBtn) unmuteBtn.style.display = 'none';
-    };
-
-    const enableAudio = () => {
-      try {
-        video.muted = false;
-        video.play().catch(() => {});
-      } catch (e) {}
-      hideUnmute();
-    };
-
-    if (unmuteBtn) {
-      unmuteBtn.addEventListener('click', enableAudio, { once: true });
+    // Start playback only after explicit user gesture
+    if (playBtn) {
+      playBtn.addEventListener('click', () => {
+        playBtn.style.display = 'none';
+        // ensure video element is shown and play
+        video.style.display = 'block';
+        video.play().then(() => {
+          document.body.classList.add('playing');
+        }).catch(() => {
+          // still show UI state even if play() is blocked
+          document.body.classList.add('playing');
+        });
+      }, { once: true });
     }
   </script>
 
   <style>
-    #unmute-btn {
+    #play-btn {
       position: fixed;
       left: 50%;
       top: 50%;
@@ -103,15 +83,6 @@
       border-radius: 6px;
       cursor: pointer;
       z-index: 9999;
-    }
-
-    body.ready #unmute-btn {
-      display: block;
-    }
-
-    /* Hide button once clicked */
-    #unmute-btn[style*="display: none"] {
-      display: none !important;
     }
   </style>
 </body>
