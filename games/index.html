@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta http-equiv="Content-Security-Policy" content="sandbox allow-scripts allow-same-origin allow-forms; form-action 'self';">
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6R76C2SXKQ"></script>
 <script>
@@ -286,17 +287,6 @@
     <span id="fs-exit-label">Exit</span>
   </div>
   <div id="fs-iframe-container">
-    <script>
-    // Rende impossibile la modifica di window.top.location da parte di script esterni
-    try {
-      Object.defineProperty(window, 'location', {
-        writable: false,
-        configurable: false
-      });
-    } catch (e) {
-      console.log("Blocco applicato");
-    }
-  </script>
     <iframe name="game-frame" id="game-frame-fs" src="about:blank" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
 
     <!-- LANDSCAPE ROTATION OVERLAY -->
