@@ -287,16 +287,15 @@
   </div>
   <div id="fs-iframe-container">
     <script>
-    // Blocca i tentativi di modificare l'URL della pagina principale (frame busting protection)
-    var prevent_bust = 0;
-    window.onbeforeunload = function() { prevent_bust++; };
-    
-    setInterval(function() {
-      if (prevent_bust > 0) {
-        prevent_bust -= 2;
-        window.top.location = 'about:blank'; // Neutralizza il redirect mandandolo nel vuoto
-      }
-    }, 1);
+    // Rende impossibile la modifica di window.top.location da parte di script esterni
+    try {
+      Object.defineProperty(window, 'location', {
+        writable: false,
+        configurable: false
+      });
+    } catch (e) {
+      console.log("Blocco applicato");
+    }
   </script>
     <iframe name="game-frame" id="game-frame-fs" src="about:blank" allowfullscreen sandbox="allow-scripts allow-same-origin allow-forms allow-popups"></iframe>
 
